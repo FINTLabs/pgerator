@@ -28,4 +28,9 @@ public class OperatorController {
     public String createSchema(String schemaName) {
         return dataAccessService.createSchema(schemaName);
     }
+
+    @PostMapping("/api/createDbUser")
+    public String createDbUser(String userName, String password) {
+        return dataAccessService.createDbUser(userName, password);
+    }
 }

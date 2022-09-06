@@ -41,4 +41,16 @@ public class PostgreSqlDataAccessService {
         }
         return null;
     }
+
+    public String createDbUser(String userName, String password) {
+        String sql = "CREATE USER " + userName + " WITH PASSWORD '" + password + "'";
+        try {
+            jdbcTemplate.execute(sql);
+            logger.log(Level.INFO, "User created");
+            return "User created";
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Error in createDbUser: " + e.getMessage());
+        }
+        return null;
+    }
 }
