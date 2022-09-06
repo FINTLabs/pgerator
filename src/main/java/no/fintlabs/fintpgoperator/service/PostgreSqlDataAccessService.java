@@ -29,4 +29,16 @@ public class PostgreSqlDataAccessService {
         }
         return null;
     }
+
+    public String createSchema(String schemaName) {
+        String sql = "CREATE SCHEMA " + schemaName;
+        try {
+            jdbcTemplate.execute(sql);
+            logger.log(Level.INFO, "Schema created");
+            return "Schema created";
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Error in createSchema: " + e.getMessage());
+        }
+        return null;
+    }
 }
