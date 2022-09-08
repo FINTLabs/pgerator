@@ -20,6 +20,11 @@ public class OperatorController {
         return "init spring boot";
     }
 
+    @PostMapping("/api/createDb")
+    public String createDb(String dbName) {
+        return dataAccessService.createPostgresDb(dbName);
+    }
+
     @PostMapping("/api/createSchema")
     public String createSchema(String schemaName) {
         return dataAccessService.createSchema(schemaName);
@@ -30,21 +35,17 @@ public class OperatorController {
         return dataAccessService.createDbUser(username, password);
     }
 
-    @PostMapping("/api/grantPrivilegeToRole")
-    public String grantPrivilegeToRole(String schemaName, String roleName, String privilege) {
-        return dataAccessService.grantPrivilegeToRole(schemaName, roleName, privilege);
+    @PostMapping("/api/grantPrivilegeToUser")
+    public String grantPrivilegeToUser(String schemaName, String username, String privilege) {
+        return dataAccessService.grantPrivilegeToUser(schemaName, username, privilege);
     }
 
-    @PostMapping("/api/createRole")
-    public String createRole(String roleName, String password) {
-        return dataAccessService.createRole(roleName, password);
-    }
     @PostMapping("/api/checkGrants")
-    public String checkGrants(String schemaName, String roleName) {
-        return dataAccessService.checkRolePrivilegesOnSchema(schemaName, roleName);
+    public String checkGrants(String schemaName, String username) {
+        return dataAccessService.checkUserPrivilegesOnSchema(schemaName, username);
     }
     @PostMapping("/api/createSchemaUserAndRole")
-    public String createSchemaUserAndRole(String schemaName, String username, String password, String roleName) {
-        return dataAccessService.createSchemaUserAndRole(schemaName, username, password, roleName);
+    public String createSchemaUserAndSetPrivileges(String schemaName, String username, String password) {
+        return dataAccessService.createSchemaUserAndSetPrivileges(schemaName, username, password);
     }
 }

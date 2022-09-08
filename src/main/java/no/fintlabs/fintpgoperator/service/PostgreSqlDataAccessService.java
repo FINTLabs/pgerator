@@ -33,6 +33,18 @@ public class PostgreSqlDataAccessService {
         this.logger = Logger.getLogger(PostgreSqlDataAccessService.class.getName());
     }
 
+    public String createPostgresDb(String dbName) {
+        String sql = "CREATE DATABASE " + dbName;
+        try {
+            jdbcTemplate.execute(sql);
+            //
+            return "Database " + dbName + " created";
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, e.getMessage());
+            return "Database " + dbName + " not created due to error: " + e.getMessage();
+        }
+    }
+
     public String createSchema(String schemaName) {
         String sqlCreateSchema = "CREATE SCHEMA IF NOT EXISTS " + schemaName;
         try {
@@ -57,69 +69,43 @@ public class PostgreSqlDataAccessService {
         return null;
     }
 
-    public String createRole(String roleName, String password) {
-        String sqlCreateRole = "CREATE ROLE " + roleName + " WITH LOGIN PASSWORD '" + password + "'";
-        try {
-            jdbcTemplate.execute(sqlCreateRole);
-            logger.log(Level.INFO, "Role created");
-            return "Role created";
-        } catch (Exception e) {
-            logger.log(Level.WARNING, "Error in createRole: " + e.getMessage());
-        }
-        return null;
-    }
 
-    public String grantRoleToUser(String roleName, String username) {
-        String sqlGrantRoleToUser = "GRANT " + roleName + " TO " + username;
-        try {
-            jdbcTemplate.execute(sqlGrantRoleToUser);
-            logger.log(Level.INFO, "Role " + roleName + " granted to user " + username);
-            return "Role " + roleName + " granted to user " + username;
-        } catch (Exception e) {
-            logger.log(Level.WARNING, "Error in grantRoleToUser: " + e.getMessage());
-        }
-        return null;
-    }
-
-
-    public String grantPrivilegeToRole(String schemaName, String roleName, String privilege) {
-        String sqlGrantPrivilege = "GRANT " + privilege + " ON ALL TABLES IN SCHEMA " + schemaName + " TO " + roleName;
-        String sqlGrantDefaultPrivileges = "ALTER DEFAULT PRIVILEGES IN SCHEMA " + schemaName + " GRANT " + privilege + " ON TABLES TO " + roleName;
+    public String grantPrivilegeToUser(String schemaName, String username, String privilege) {
+        String sqlGrantPrivilege = "GRANT " + privilege + " ON ALL TABLES IN SCHEMA " + schemaName + " TO " + username;
+        String sqlGrantDefaultPrivileges = "ALTER DEFAULT PRIVILEGES IN SCHEMA " + schemaName + " GRANT " + privilege + " ON TABLES TO " + username;
         try {
             jdbcTemplate.execute(sqlGrantPrivilege);
             jdbcTemplate.execute(sqlGrantDefaultPrivileges);
-            logger.log(Level.INFO, "Privilege " + privilege + " granted to role " + roleName + " on schema " + schemaName);
-            return "Privilege " + privilege + " granted to role " + roleName + " on schema " + schemaName;
+            logger.log(Level.INFO, "Privilege " + privilege + " granted to " + username + " on schema " + schemaName);
+            return "Privilege " + privilege + " granted to " + username + " on schema " + schemaName;
         } catch (Exception e) {
-            logger.log(Level.WARNING, "Error in grantPrivilegeToRole: " + e.getMessage());
-            return "Error in grantPrivilegeToRole: " + e.getMessage();
+            logger.log(Level.WARNING, "Error in grantPrivilegeToUser: " + e.getMessage());
+            return "Error in grantPrivilegeToUser: " + e.getMessage();
         }
     }
 
-    public String checkRolePrivilegesOnSchema(String schemaName, String roleName) {
-        String sqlGetPrivileges = "SELECT grantee, table_schema, privilege_type FROM information_schema.role_table_grants WHERE grantee = '" + roleName + "' AND table_schema = '" + schemaName + "'";
+    public String checkUserPrivilegesOnSchema(String schemaName, String username) {
+        String sqlGetPrivileges = "SELECT grantee, table_schema, privilege_type FROM information_schema.role_table_grants WHERE grantee = '" + username + "' AND table_schema = '" + schemaName + "'";
         String sqlCreateTestTable = "CREATE TABLE " + schemaName + ".testtable (id SERIAL PRIMARY KEY, name VARCHAR(255) NOT NULL)";
         String sqlDropTestTable = "DROP TABLE " + schemaName + ".testtable";
         try {
             logger.log(Level.INFO, "Creating test table");
             jdbcTemplate.execute(sqlCreateTestTable);
             List<String> privileges = jdbcTemplate.query(sqlGetPrivileges, (rs, rowNum) -> rs.getString("privilege_type"));
-            logger.log(Level.INFO, "Privileges for role " + roleName + " on schema " + schemaName + ": " + privileges);
+            logger.log(Level.INFO, "Privileges for " + username + " on schema " + schemaName + ": " + privileges);
             logger.log(Level.INFO, "Dropping test table");
             jdbcTemplate.execute(sqlDropTestTable);
-            return "Privileges for role " + roleName + " on schema " + schemaName + ": " + privileges;
+            return "Privileges for " + username + " on schema " + schemaName + ": " + privileges;
         } catch (Exception e) {
             logger.log(Level.WARNING, "Error in checkRolePrivilegesOnSchema: " + e.getMessage());
-            return "Error in checkRolePrivilegesOnSchema: " + e.getMessage();
+            return "Error in checkUserPrivilegesOnSchema: " + e.getMessage();
         }
     }
 
-    public String createSchemaUserAndRole(String schemaName, String username, String password, String roleName) {
+    public String createSchemaUserAndSetPrivileges(String schemaName, String username, String password) {
         createSchema(schemaName);
         createDbUser(username, password);
-        createRole(roleName, password);
-        grantPrivilegeToRole(schemaName, roleName, Privilege.ALL.toString());
-        grantRoleToUser(roleName, username);
-        return checkRolePrivilegesOnSchema(schemaName, roleName);
+        grantPrivilegeToUser(schemaName, username, Privilege.ALL.toString());
+        return checkUserPrivilegesOnSchema(schemaName, username);
     }
 }
