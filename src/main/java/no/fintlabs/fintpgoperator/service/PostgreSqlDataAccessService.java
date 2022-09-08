@@ -9,7 +9,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Component
-public class PostgreSqlDataAccessService {
+public class PostgreSqlDataAccessService implements DataAccessService {
     private JdbcTemplate jdbcTemplate;
     private Logger logger;
 
@@ -34,7 +34,7 @@ public class PostgreSqlDataAccessService {
         this.logger = Logger.getLogger(PostgreSqlDataAccessService.class.getName());
     }
 
-    public String createPostgresDb(String dbName) {
+    public String createDb(String dbName) {
         String sql = "CREATE DATABASE " + dbName;
         try {
             jdbcTemplate.execute(sql);

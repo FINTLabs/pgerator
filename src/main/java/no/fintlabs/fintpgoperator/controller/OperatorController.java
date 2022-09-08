@@ -22,7 +22,7 @@ public class OperatorController {
 
     @PostMapping("/api/createDb")
     public String createDb(String dbName) {
-        return dataAccessService.createPostgresDb(dbName);
+        return dataAccessService.createDb(dbName);
     }
 
     @PostMapping("/api/createSchema")
