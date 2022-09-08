@@ -45,7 +45,7 @@ public class OperatorController {
         return dataAccessService.checkUserPrivilegesOnSchema(schemaName, username);
     }
     @PostMapping("/api/createSchemaUserAndRole")
-    public String createSchemaUserAndSetPrivileges(String schemaName, String username, String password) {
-        return dataAccessService.createSchemaUserAndSetPrivileges(schemaName, username, password);
+    public String createSchemaUserAndSetPrivileges(String schemaName, String username, String password, String privileges) {
+        return dataAccessService.createSchemaUserAndSetPrivileges(schemaName, username, password, privileges);
     }
 }

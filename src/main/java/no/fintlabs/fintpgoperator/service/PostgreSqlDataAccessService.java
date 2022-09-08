@@ -3,6 +3,7 @@ package no.fintlabs.fintpgoperator.service;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -102,10 +103,15 @@ public class PostgreSqlDataAccessService {
         }
     }
 
-    public String createSchemaUserAndSetPrivileges(String schemaName, String username, String password) {
+    public String createSchemaUserAndSetPrivileges(String schemaName, String username, String password, String privileges) {
         createSchema(schemaName);
         createDbUser(username, password);
-        grantPrivilegeToUser(schemaName, username, Privilege.ALL.toString());
+        String[] privilegesArray = privileges.split(",");
+        for (String privilege : privilegesArray) {
+            if (Arrays.stream(Privilege.class.getEnumConstants()).anyMatch(e -> e.name().equals(privilege.toUpperCase().trim()))) {
+                grantPrivilegeToUser(schemaName, username, privilege);
+            }
+        }
         return checkUserPrivilegesOnSchema(schemaName, username);
     }
 }
