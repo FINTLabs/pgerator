@@ -20,11 +20,6 @@ public class OperatorController {
         return "init spring boot";
     }
 
-    @GetMapping("/api/allEntries")
-    public String getAllEntries() {
-        return dataAccessService.getAllEntries().toString();
-    }
-
     @PostMapping("/api/createSchema")
     public String createSchema(String schemaName) {
         return dataAccessService.createSchema(schemaName);
