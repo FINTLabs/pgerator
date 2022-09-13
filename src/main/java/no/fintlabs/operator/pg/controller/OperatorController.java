@@ -1,7 +1,7 @@
 package no.fintlabs.operator.pg.controller;
 
-import no.fintlabs.operator.pg.modell.DatabaseCreateRequest;
-import no.fintlabs.operator.pg.modell.SchemaCreateRequest;
+import no.fintlabs.operator.pg.model.DatabaseCreateRequest;
+import no.fintlabs.operator.pg.model.SchemaCreateRequest;
 import no.fintlabs.operator.pg.service.PostgreSqlDataAccessService;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
