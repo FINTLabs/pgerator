@@ -7,8 +7,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Slf4j
 @Component
@@ -36,25 +34,17 @@ public class PostgreSqlDataAccessService {
     }
 
     public void createDb(String dbName) throws DataAccessException {
-        //String sql = "CREATE DATABASE " + dbName;
-     //   try {
-            jdbcTemplate.execute("CREATE DATABASE " + dbName);
-//            //
-//            return "Database " + dbName + " created";
-//        } catch (DataAccessException e) {
-//            log.error("An error occured {}",e.getMessage());
-//            return "Database " + dbName + " not created due to error: " + e.getMessage();
-//        }
+        jdbcTemplate.execute("CREATE DATABASE " + dbName);
     }
 
     public String createSchema(String schemaName) {
         String sqlCreateSchema = "CREATE SCHEMA IF NOT EXISTS " + schemaName;
         try {
             jdbcTemplate.execute(sqlCreateSchema);
-            logger.log(Level.INFO, "Schema " + schemaName + " created");
+            log.info("Schema " + schemaName + " created");
             return "Schema " + schemaName + " created";
         } catch (Exception e) {
-            logger.log(Level.WARNING, "Error in createSchema: " + e.getMessage());
+            log.error("Error in createSchema: " + e.getMessage());
         }
         return null;
     }
@@ -63,10 +53,10 @@ public class PostgreSqlDataAccessService {
         String sqlCreateDbUser = "CREATE USER " + username + " WITH PASSWORD '" + password + "'";
         try {
             jdbcTemplate.execute(sqlCreateDbUser);
-            logger.log(Level.INFO, "User " + username + " created");
+            log.info("User " + username + " created");
             return "User " + username + " created";
         } catch (Exception e) {
-            logger.log(Level.WARNING, "Error in createDbUser: " + e.getMessage());
+            log.error("Error in createDbUser: " + e.getMessage());
         }
         return null;
     }
@@ -78,10 +68,10 @@ public class PostgreSqlDataAccessService {
         try {
             jdbcTemplate.execute(sqlGrantPrivilege);
             jdbcTemplate.execute(sqlGrantDefaultPrivileges);
-            logger.log(Level.INFO, "Privilege " + privilege + " granted to " + username + " on schema " + schemaName);
+            log.info("Privilege " + privilege + " granted to " + username + " on schema " + schemaName);
             return "Privilege " + privilege + " granted to " + username + " on schema " + schemaName;
         } catch (Exception e) {
-            logger.log(Level.WARNING, "Error in grantPrivilegeToUser: " + e.getMessage());
+            log.error("Error in grantPrivilegeToUser: " + e.getMessage());
             return "Error in grantPrivilegeToUser: " + e.getMessage();
         }
     }
@@ -91,15 +81,15 @@ public class PostgreSqlDataAccessService {
         String sqlCreateTestTable = "CREATE TABLE " + schemaName + ".testtable (id SERIAL PRIMARY KEY, name VARCHAR(255) NOT NULL)";
         String sqlDropTestTable = "DROP TABLE " + schemaName + ".testtable";
         try {
-            logger.log(Level.INFO, "Creating test table");
+            log.info("Creating test table");
             jdbcTemplate.execute(sqlCreateTestTable);
             List<String> privileges = jdbcTemplate.query(sqlGetPrivileges, (rs, rowNum) -> rs.getString("privilege_type"));
-            logger.log(Level.INFO, "Privileges for " + username + " on schema " + schemaName + ": " + privileges);
-            logger.log(Level.INFO, "Dropping test table");
+            log.info("Privileges for " + username + " on schema " + schemaName + ": " + privileges);
+            log.info("Dropping test table");
             jdbcTemplate.execute(sqlDropTestTable);
             return "Privileges for " + username + " on schema " + schemaName + ": " + privileges;
         } catch (Exception e) {
-            logger.log(Level.WARNING, "Error in checkRolePrivilegesOnSchema: " + e.getMessage());
+            log.error("Error in checkRolePrivilegesOnSchema: " + e.getMessage());
             return "Error in checkUserPrivilegesOnSchema: " + e.getMessage();
         }
     }
