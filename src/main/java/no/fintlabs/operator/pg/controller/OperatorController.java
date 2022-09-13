@@ -1,7 +1,6 @@
 package no.fintlabs.operator.pg.controller;
 
-import no.fintlabs.operator.pg.model.DatabaseCreateRequest;
-import no.fintlabs.operator.pg.model.SchemaCreateRequest;
+import no.fintlabs.operator.pg.model.*;
 import no.fintlabs.operator.pg.service.PostgreSqlDataAccessService;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
@@ -26,9 +25,9 @@ public class OperatorController {
 
     @PostMapping("/api/db/")
     public ResponseEntity<Void> createDb(@RequestBody DatabaseCreateRequest databaseCreateRequest) {
-         dataAccessService.createDb(databaseCreateRequest.getDatabaseName());
+        dataAccessService.createDb(databaseCreateRequest.getDatabaseName());
 
-         return ResponseEntity.status(HttpStatus.CREATED).build();
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @PostMapping("/api/db/{databaseName}/schema")
@@ -39,15 +38,15 @@ public class OperatorController {
     }
 
     @PostMapping("/api/db/{databaseName}/user")
-    public ResponseEntity<Void> createDbUser(@PathVariable String databaseName, String username, String password) {
-        dataAccessService.createDbUser(username, password);
+    public ResponseEntity<Void> createDbUser(@PathVariable String databaseName, @RequestBody UserCreateRequest userCreateRequest) {
+        dataAccessService.createDbUser(userCreateRequest.getUsername(), userCreateRequest.getPassword());
 
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @PostMapping("/api/db/{databaseName}/schema/{schemaName}/user/{username}/privilege")
-    public ResponseEntity<Void> grantPrivilegeToUser(@PathVariable String databaseName, @PathVariable String schemaName, @PathVariable String username, String privilege) {
-        dataAccessService.grantPrivilegeToUser(schemaName, username, privilege);
+    public ResponseEntity<Void> grantPrivilegeToUser(@PathVariable String databaseName, @PathVariable String schemaName, @PathVariable String username, @RequestBody PrivilegeRequest privilegeRequest) {
+        dataAccessService.grantPrivilegeToUser(schemaName, username, privilegeRequest.getPrivilege());
 
         return ResponseEntity.status(HttpStatus.OK).build();
     }
@@ -57,9 +56,10 @@ public class OperatorController {
     public String getUserPrivilegesOnSchema(@PathVariable String databaseName, @PathVariable String schemaName, @PathVariable String username) {
         return dataAccessService.getUserPrivilegesOnSchema(schemaName, username);
     }
+
     @PostMapping("/api/db/{databaseName}/schema/{schemaName}/user/{username}/privileges")
-    public ResponseEntity<Void> createSchemaUserAndSetPrivileges(@PathVariable String databaseName, @PathVariable String schemaName, @PathVariable String username, String password, String privileges) {
-        dataAccessService.createSchemaUserAndSetPrivileges(schemaName, username, password, privileges);
+    public ResponseEntity<Void> createSchemaUserAndSetPrivileges(@PathVariable String databaseName, @RequestBody CreateSchemaUserAndSetPrivilegesRequest request) {
+        dataAccessService.createSchemaUserAndSetPrivileges(request.getSchemaName(), request.getUsername(), request.getPassword(), request.getPrivileges());
 
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
