@@ -46,7 +46,7 @@ class PostgreSqlDataAccessServiceTest extends Specification {
         String schemaCreated = postgreSqlDataAccessService.createSchema(schemaName)
         String privilege = "SELECT, INSERT"
         String privilegeGranted = postgreSqlDataAccessService.grantPrivilegeToUser(schemaName, username, privilege)
-        String privileges = postgreSqlDataAccessService.checkUserPrivilegesOnSchema(schemaName, username)
+        String privileges = postgreSqlDataAccessService.getUserPrivilegesOnSchema(schemaName, username)
 
         then:
         userCreated == "User " + username + " created"

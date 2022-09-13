@@ -32,27 +32,36 @@ public class OperatorController {
     }
 
     @PostMapping("/api/db/{databaseName}/schema")
-    public String createSchema(@PathVariable String databaseName, @RequestBody SchemaCreateRequest schemaCreateRequest) {
-        return dataAccessService.createSchema(schemaCreateRequest.getSchemaName());
+    public ResponseEntity<Void> createSchema(@PathVariable String databaseName, @RequestBody SchemaCreateRequest schemaCreateRequest) {
+        dataAccessService.createSchema(schemaCreateRequest.getSchemaName());
+
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    @PostMapping("/api/createDbUser")
-    public String createDbUser(String username, String password) {
-        return dataAccessService.createDbUser(username, password);
+    @PostMapping("/api/db/{databaseName}/user")
+    public ResponseEntity<Void> createDbUser(@PathVariable String databaseName, String username, String password) {
+        dataAccessService.createDbUser(username, password);
+
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    @PostMapping("/api/grantPrivilegeToUser")
-    public String grantPrivilegeToUser(String schemaName, String username, String privilege) {
-        return dataAccessService.grantPrivilegeToUser(schemaName, username, privilege);
+    @PostMapping("/api/db/{databaseName}/schema/{schemaName}/user/{username}/privilege")
+    public ResponseEntity<Void> grantPrivilegeToUser(@PathVariable String databaseName, @PathVariable String schemaName, @PathVariable String username, String privilege) {
+        dataAccessService.grantPrivilegeToUser(schemaName, username, privilege);
+
+        return ResponseEntity.status(HttpStatus.OK).build();
     }
 
-    @PostMapping("/api/checkGrants")
-    public String checkGrants(String schemaName, String username) {
-        return dataAccessService.checkUserPrivilegesOnSchema(schemaName, username);
+    @ResponseBody
+    @GetMapping("/api/db/{databaseName}/schema/{schemaName}/user/{username}/privileges")
+    public String getUserPrivilegesOnSchema(@PathVariable String databaseName, @PathVariable String schemaName, @PathVariable String username) {
+        return dataAccessService.getUserPrivilegesOnSchema(schemaName, username);
     }
-    @PostMapping("/api/createSchemaUserAndRole")
-    public String createSchemaUserAndSetPrivileges(String schemaName, String username, String password, String privileges) {
-        return dataAccessService.createSchemaUserAndSetPrivileges(schemaName, username, password, privileges);
+    @PostMapping("/api/db/{databaseName}/schema/{schemaName}/user/{username}/privileges")
+    public ResponseEntity<Void> createSchemaUserAndSetPrivileges(@PathVariable String databaseName, @PathVariable String schemaName, @PathVariable String username, String password, String privileges) {
+        dataAccessService.createSchemaUserAndSetPrivileges(schemaName, username, password, privileges);
+
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @ExceptionHandler(DataAccessException.class)
