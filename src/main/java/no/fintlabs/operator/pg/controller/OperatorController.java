@@ -58,7 +58,7 @@ public class OperatorController {
     }
 
     @PostMapping("/api/db/{databaseName}/schema/{schemaName}/user/{username}/privileges")
-    public ResponseEntity<Void> createSchemaUserAndSetPrivileges(@PathVariable String databaseName, @RequestBody CreateSchemaUserAndSetPrivilegesRequest request) {
+    public ResponseEntity<Void> createSchemaUserAndSetPrivileges(@PathVariable String databaseName, @RequestBody SchemaUserCreateRequest request) {
         dataAccessService.createSchemaUserAndSetPrivileges(request.getSchemaName(), request.getUsername(), request.getPassword(), request.getPrivileges());
 
         return ResponseEntity.status(HttpStatus.CREATED).build();
