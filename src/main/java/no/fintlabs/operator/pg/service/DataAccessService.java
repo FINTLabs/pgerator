@@ -1,4 +1,4 @@
-package no.fintlabs.fintpgoperator.service;
+package no.fintlabs.operator.pg.service;
 
 public interface DataAccessService {
     String createDb(String dbName);

@@ -1,5 +1,7 @@
-package no.fintlabs.fintpgoperator.service;
+package no.fintlabs.operator.pg.service;
 
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
@@ -8,10 +10,10 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@Slf4j
 @Component
-public class PostgreSqlDataAccessService implements DataAccessService {
+public class PostgreSqlDataAccessService {
     private JdbcTemplate jdbcTemplate;
-    private Logger logger;
 
     public enum Privilege {
         SELECT,
@@ -31,19 +33,18 @@ public class PostgreSqlDataAccessService implements DataAccessService {
 
     public PostgreSqlDataAccessService(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
-        this.logger = Logger.getLogger(PostgreSqlDataAccessService.class.getName());
     }
 
-    public String createDb(String dbName) {
-        String sql = "CREATE DATABASE " + dbName;
-        try {
-            jdbcTemplate.execute(sql);
-            //
-            return "Database " + dbName + " created";
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, e.getMessage());
-            return "Database " + dbName + " not created due to error: " + e.getMessage();
-        }
+    public void createDb(String dbName) throws DataAccessException {
+        //String sql = "CREATE DATABASE " + dbName;
+     //   try {
+            jdbcTemplate.execute("CREATE DATABASE " + dbName);
+//            //
+//            return "Database " + dbName + " created";
+//        } catch (DataAccessException e) {
+//            log.error("An error occured {}",e.getMessage());
+//            return "Database " + dbName + " not created due to error: " + e.getMessage();
+//        }
     }
 
     public String createSchema(String schemaName) {
