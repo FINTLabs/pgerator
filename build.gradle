@@ -21,6 +21,7 @@ dependencies {
     testImplementation 'org.spockframework:spock-core:2.2-groovy-3.0'
 	testImplementation 'org.spockframework:spock-spring:2.2-groovy-3.0'
 	testImplementation 'org.codehaus.groovy:groovy-all:3.0.8'
+	testImplementation 'org.testcontainers:postgresql:1.17.3'
     runtimeOnly 'org.postgresql:postgresql'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }

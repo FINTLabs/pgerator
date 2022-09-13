@@ -10,7 +10,7 @@ class OperatorControllerTest extends Specification {
     @Autowired
     private OperatorController operatorController
 
-    def "Context Loads"() {
+    def "OperatorController is created"() {
         expect:
         operatorController
     }
