@@ -45,7 +45,15 @@ public class PostgreSqlDataAccessService {
         log.info("Database created: " + dbName);
     }
 
+    private boolean databaseExists(String dbName) throws DataAccessException {
+        List<String> results = jdbcTemplate.query("SELECT datname FROM pg_catalog.pg_database WHERE lower(datname) = '" + dbName.toLowerCase() + "'", (rs, rowNum) -> rs.getString("datname"));
+        return results.size() > 0;
+    }
+
     private void changeDatabase(String databaseName) {
+        if (!databaseExists(databaseName)) {
+            createDb(databaseName);
+        }
         DataSource dataSource = DataSourceBuilder.create()
                 .url("jdbc:postgresql://localhost:5432/" + databaseName.toLowerCase())
                 .username(environment.getProperty("spring.datasource.username"))
