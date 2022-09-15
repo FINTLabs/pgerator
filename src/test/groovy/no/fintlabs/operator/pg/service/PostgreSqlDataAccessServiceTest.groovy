@@ -2,6 +2,7 @@ package no.fintlabs.operator.pg.service
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.dao.DataAccessException
 import spock.lang.Specification
 
 @SpringBootTest
@@ -81,4 +82,32 @@ class PostgreSqlDataAccessServiceTest extends Specification {
         noExceptionThrown()
         getPrivileges == "INSERT,SELECT"
     }
+
+    def "Creating a database that already exists throws DataAccessException"(){
+        given:
+        String databaseName = "testcreatedb"
+        postgreSqlDataAccessService.createDb(databaseName)
+
+        when:
+        postgreSqlDataAccessService.createDb(databaseName)
+
+        then:
+        thrown(DataAccessException)
+    }
+
+    def "Creating a database user that already exists throws DataAccessException"(){
+        given:
+        String databaseName = "doubleusertestdb"
+        String username = "testcreatedoubledbuser"
+        String password = "testpw"
+        postgreSqlDataAccessService.createDbUser(databaseName, username, password)
+
+        when:
+        postgreSqlDataAccessService.createDbUser(databaseName, username, password)
+
+        then:
+        thrown(DataAccessException)
+    }
+
+
 }
