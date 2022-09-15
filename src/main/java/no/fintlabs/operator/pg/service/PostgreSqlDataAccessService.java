@@ -55,7 +55,7 @@ public class PostgreSqlDataAccessService {
             createDb(databaseName);
         }
         DataSource dataSource = DataSourceBuilder.create()
-                .url("jdbc:postgresql://localhost:5432/" + databaseName.toLowerCase())
+                .url(environment.getProperty("spring.datasource.base-url") + databaseName.toLowerCase())
                 .username(environment.getProperty("spring.datasource.username"))
                 .password(environment.getProperty("spring.datasource.password"))
                 .build();
