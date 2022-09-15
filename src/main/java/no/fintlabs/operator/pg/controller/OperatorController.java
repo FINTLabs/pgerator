@@ -31,7 +31,7 @@ public class OperatorController {
     }
 
     @PostMapping("/api/db/{databaseName}/schema")
-    public ResponseEntity<Void> createSchema(@PathVariable String databaseName, @RequestBody SchemaCreateRequest schemaCreateRequest){
+    public ResponseEntity<Void> createSchema(@PathVariable String databaseName, @RequestBody SchemaCreateRequest schemaCreateRequest) {
         dataAccessService.createSchema(databaseName, schemaCreateRequest.getSchemaName());
 
         return ResponseEntity.status(HttpStatus.CREATED).build();
@@ -58,7 +58,7 @@ public class OperatorController {
     }
 
     @PostMapping("/api/db/{databaseName}/schema/{schemaName}/user/{username}/privileges")
-    public ResponseEntity<Void> createSchemaUserAndSetPrivileges(@PathVariable String databaseName, @PathVariable String schemaName, @PathVariable String username, @RequestBody SchemaUserCreateRequest request){
+    public ResponseEntity<Void> createSchemaUserAndSetPrivileges(@PathVariable String databaseName, @PathVariable String schemaName, @PathVariable String username, @RequestBody SchemaUserCreateRequest request) {
         dataAccessService.createSchemaUserAndSetPrivileges(databaseName, schemaName, username, request.getPassword(), request.getPrivileges());
 
         return ResponseEntity.status(HttpStatus.CREATED).build();

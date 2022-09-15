@@ -18,7 +18,7 @@ public class PostgreSqlDataAccessService {
 
     @Autowired
     private Environment environment;
-    private JdbcTemplate jdbcTemplate;
+    private final JdbcTemplate jdbcTemplate;
 
     public enum Privilege {
         SELECT,
@@ -45,7 +45,7 @@ public class PostgreSqlDataAccessService {
         log.info("Database created: " + dbName);
     }
 
-    private void changeDatabase(String databaseName){
+    private void changeDatabase(String databaseName) {
         DataSource dataSource = DataSourceBuilder.create()
                 .url("jdbc:postgresql://localhost:5432/" + databaseName.toLowerCase())
                 .username(environment.getProperty("spring.datasource.username"))
@@ -96,7 +96,7 @@ public class PostgreSqlDataAccessService {
         return String.join(",", privileges);
     }
 
-    public void createSchemaUserAndSetPrivileges(String databaseName, String schemaName, String username, String password, String privileges) throws DataAccessException{
+    public void createSchemaUserAndSetPrivileges(String databaseName, String schemaName, String username, String password, String privileges) throws DataAccessException {
         createSchema(databaseName, schemaName);
         createDbUser(databaseName, username, password);
         String[] privilegesArray = privileges.split(",");
