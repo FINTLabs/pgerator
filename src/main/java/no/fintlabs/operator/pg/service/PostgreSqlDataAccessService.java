@@ -1,16 +1,23 @@
 package no.fintlabs.operator.pg.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.jdbc.DataSourceBuilder;
+import org.springframework.core.env.Environment;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
+import javax.sql.DataSource;
 import java.util.Arrays;
 import java.util.List;
 
 @Slf4j
 @Component
 public class PostgreSqlDataAccessService {
+
+    @Autowired
+    private Environment environment;
     private JdbcTemplate jdbcTemplate;
 
     public enum Privilege {
@@ -38,20 +45,32 @@ public class PostgreSqlDataAccessService {
         log.info("Database created: " + dbName);
     }
 
-    public void createSchema(String schemaName) throws DataAccessException {
+    private void changeDatabase(String databaseName){
+        DataSource dataSource = DataSourceBuilder.create()
+                .url("jdbc:postgresql://localhost:5432/" + databaseName.toLowerCase())
+                .username(environment.getProperty("spring.datasource.username"))
+                .password(environment.getProperty("spring.datasource.password"))
+                .build();
+        jdbcTemplate.setDataSource(dataSource);
+    }
+
+    public void createSchema(String databaseName, String schemaName) throws DataAccessException {
+        changeDatabase(databaseName);
         String sqlCreateSchema = "CREATE SCHEMA IF NOT EXISTS " + schemaName;
         jdbcTemplate.execute(sqlCreateSchema);
         log.info("Schema created: " + schemaName);
     }
 
-    public void createDbUser(String username, String password) throws DataAccessException {
+    public void createDbUser(String databaseName, String username, String password) throws DataAccessException {
+        changeDatabase(databaseName);
         String sqlCreateDbUser = "CREATE USER " + username + " WITH PASSWORD '" + password + "'";
         jdbcTemplate.execute(sqlCreateDbUser);
         log.info("User " + username + " created");
     }
 
 
-    public void grantPrivilegeToUser(String schemaName, String username, String privilege) throws DataAccessException {
+    public void grantPrivilegeToUser(String databaseName, String schemaName, String username, String privilege) throws DataAccessException {
+        changeDatabase(databaseName);
         String sqlGrantPrivilege = "GRANT " + privilege + " ON ALL TABLES IN SCHEMA " + schemaName + " TO " + username;
         String sqlGrantDefaultPrivileges = "ALTER DEFAULT PRIVILEGES IN SCHEMA " + schemaName + " GRANT " + privilege + " ON TABLES TO " + username;
         jdbcTemplate.execute(sqlGrantPrivilege);
@@ -59,7 +78,8 @@ public class PostgreSqlDataAccessService {
         log.info("Privilege " + privilege + " granted to " + username + " on schema " + schemaName);
     }
 
-    public String getUserPrivilegesOnSchema(String schemaName, String username) throws DataAccessException {
+    public String getUserPrivilegesOnSchema(String databaseName, String schemaName, String username) throws DataAccessException {
+        changeDatabase(databaseName);
         String sqlGetPrivileges = "SELECT grantee, table_schema, privilege_type FROM information_schema.role_table_grants WHERE grantee = '" + username + "' AND table_schema = '" + schemaName + "'";
         String sqlCreateTestTable = "CREATE TABLE " + schemaName + ".testtable (id SERIAL PRIMARY KEY, name VARCHAR(255) NOT NULL)";
         String sqlDropTestTable = "DROP TABLE " + schemaName + ".testtable";
@@ -76,13 +96,13 @@ public class PostgreSqlDataAccessService {
         return String.join(",", privileges);
     }
 
-    public void createSchemaUserAndSetPrivileges(String schemaName, String username, String password, String privileges) throws DataAccessException {
-        createSchema(schemaName);
-        createDbUser(username, password);
+    public void createSchemaUserAndSetPrivileges(String databaseName, String schemaName, String username, String password, String privileges) throws DataAccessException{
+        createSchema(databaseName, schemaName);
+        createDbUser(databaseName, username, password);
         String[] privilegesArray = privileges.split(",");
         for (String privilege : privilegesArray) {
             if (Arrays.stream(Privilege.class.getEnumConstants()).anyMatch(e -> e.name().equals(privilege.toUpperCase().trim()))) {
-                grantPrivilegeToUser(schemaName, username, privilege);
+                grantPrivilegeToUser(databaseName, schemaName, username, privilege);
             }
         }
     }
