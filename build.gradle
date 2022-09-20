@@ -23,7 +23,13 @@ dependencies {
 
 	annotationProcessor 'org.projectlombok:lombok'
 
+	annotationProcessor "io.javaoperatorsdk:operator-framework:3.2.0"
+	implementation "io.javaoperatorsdk:operator-framework-spring-boot-starter:3.2.0"
+
 	runtimeOnly 'org.postgresql:postgresql'
+
+	annotationProcessor 'io.fabric8:crd-generator-apt:6.1.1'
+
 
 	testImplementation 'org.spockframework:spock-core:2.2-groovy-3.0'
 	testImplementation 'org.spockframework:spock-spring:2.2-groovy-3.0'

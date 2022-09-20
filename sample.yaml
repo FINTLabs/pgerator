@@ -1,0 +1,8 @@
+apiVersion: "fintlabs.no/v1alpha1"
+kind: PGSchemaAndUserResource
+metadata:
+  name: fint-flyt-schema-user
+spec:
+  databaseName: x
+  schemaName: x
+  deleteOnCleanup: false
