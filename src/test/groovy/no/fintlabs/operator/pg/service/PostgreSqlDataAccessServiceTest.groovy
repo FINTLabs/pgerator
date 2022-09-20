@@ -53,12 +53,13 @@ class PostgreSqlDataAccessServiceTest extends Specification {
         String username = "testgrantprivilegetouser"
         String password = "testpw"
         String schemaName = "testgrantprivilegetouserschema"
-        String privilege = "SELECT, INSERT"
+        List<String> privilege = ["SELECT", "INSERT"]
 
         when:
         postgreSqlDataAccessService.createDbUser(databaseName, username, password)
         postgreSqlDataAccessService.createSchema(databaseName, schemaName)
-        postgreSqlDataAccessService.grantPrivilegeToUser(databaseName, schemaName, username, privilege)
+        postgreSqlDataAccessService.grantPrivilegeToUser(databaseName, schemaName, username, privilege[0])
+        postgreSqlDataAccessService.grantPrivilegeToUser(databaseName, schemaName, username, privilege[1])
         String privileges = postgreSqlDataAccessService.getUserPrivilegesOnSchema(databaseName, schemaName, username)
 
         then:
@@ -72,7 +73,7 @@ class PostgreSqlDataAccessServiceTest extends Specification {
         String schemaName = "testschema"
         String username = "testuser"
         String password = "testpw"
-        String privileges = "SELECT, INSERT"
+        List<String> privileges = ["SELECT", "INSERT"]
 
         when:
         postgreSqlDataAccessService.createSchemaUserAndSetPrivileges(databaseName, schemaName, username, password, privileges)

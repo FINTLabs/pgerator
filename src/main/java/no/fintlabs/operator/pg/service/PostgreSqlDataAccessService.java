@@ -104,11 +104,10 @@ public class PostgreSqlDataAccessService {
         return String.join(",", privileges);
     }
 
-    public void createSchemaUserAndSetPrivileges(String databaseName, String schemaName, String username, String password, String privileges) throws DataAccessException {
+    public void createSchemaUserAndSetPrivileges(String databaseName, String schemaName, String username, String password, List<String> privileges) throws DataAccessException {
         createSchema(databaseName, schemaName);
         createDbUser(databaseName, username, password);
-        String[] privilegesArray = privileges.split(",");
-        for (String privilege : privilegesArray) {
+        for (String privilege : privileges) {
             if (Arrays.stream(Privilege.class.getEnumConstants()).anyMatch(e -> e.name().equals(privilege.toUpperCase().trim()))) {
                 grantPrivilegeToUser(databaseName, schemaName, username, privilege);
             }

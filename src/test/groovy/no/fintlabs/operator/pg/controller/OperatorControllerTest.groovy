@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.testcontainers.containers.PostgreSQLContainer
 import spock.lang.Specification
 
 @SpringBootTest
@@ -37,7 +36,7 @@ class OperatorControllerTest extends Specification {
         String databaseName = "spocktestdb"
         String schemaName = "spocktestschema"
         String userName = "spocktestuser"
-        SchemaUserCreateRequest request= new SchemaUserCreateRequest(password: "spocktestpassword", privileges: "select, insert")
+        SchemaUserCreateRequest request= new SchemaUserCreateRequest(password: "spocktestpassword", privileges: ["select", "insert"])
 
         when:
         ResponseEntity response = operatorController.createSchemaUserAndSetPrivileges(databaseName, schemaName, userName, request)

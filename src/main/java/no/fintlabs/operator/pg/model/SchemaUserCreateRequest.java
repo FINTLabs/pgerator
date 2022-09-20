@@ -2,8 +2,10 @@ package no.fintlabs.operator.pg.model;
 
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class SchemaUserCreateRequest {
     private String password;
-    private String privileges;
+    private List<String> privileges;
 }
