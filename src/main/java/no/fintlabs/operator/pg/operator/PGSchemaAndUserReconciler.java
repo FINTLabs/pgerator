@@ -43,6 +43,8 @@ public class PGSchemaAndUserReconciler implements Reconciler<PGSchemaAndUserReso
 
         secretService.createSecretIfNeeded(context, resource, username, pw);
 
+        // TODO: check if user, database and/or schema exists
+
 //        dataAccessService.createDb(resource.getSpec().getDatabaseName());
 //        dataAccessService.createSchema(resource.getSpec().getDatabaseName(), resource.getSpec().getSchemaName());
 //        dataAccessService.createDbUser(resource.getSpec().getDatabaseName(), username, pw);
@@ -57,11 +59,18 @@ public class PGSchemaAndUserReconciler implements Reconciler<PGSchemaAndUserReso
 
     @Override
     public DeleteControl cleanup(PGSchemaAndUserResource resource, Context<PGSchemaAndUserResource> context) {
+        // TODO: Implement method
+        // should:
+        // - delete secret from k8s
+        // - delete database? Check if other use same db first?
+        // - delete schema
+        // - delete user
         return null;
     }
 
     @Override
     public ErrorStatusUpdateControl<PGSchemaAndUserResource> updateErrorStatus(PGSchemaAndUserResource resource, Context<PGSchemaAndUserResource> context, Exception e) {
+        // TODO: Implement method
         return null;
     }
 

@@ -64,6 +64,21 @@ public class OperatorController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
+    @DeleteMapping("/api/db/{databaseName}/user/{username}")
+    public ResponseEntity<Void> deleteUser(@PathVariable String databaseName, @PathVariable String username) {
+        dataAccessService.deleteUser(databaseName, username);
+
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
+    @DeleteMapping("/api/db/{databaseName}/schema/{schemaName}")
+    public ResponseEntity<Void> deleteSchema(@PathVariable String databaseName, @PathVariable String schemaName) {
+        dataAccessService.deleteSchema(databaseName, schemaName);
+
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
+
     @ExceptionHandler(DataAccessException.class)
     public ResponseEntity<ErrorResponse> handleDataAccessException(Exception e) {
         return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));

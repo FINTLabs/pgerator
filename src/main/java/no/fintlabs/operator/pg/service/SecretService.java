@@ -30,7 +30,8 @@ public class SecretService {
         if (context.getSecondaryResource(Secret.class).isEmpty()) {
             log.debug("Secret for {} is missing. Creating secret.", resource.getMetadata().getName());
             Map<String, String> stringData = new HashMap<>();
-            
+
+            // TODO: Fix StringData keys
             stringData.put("fint.db.username", username);
             stringData.put("fint.db.password", password);
 

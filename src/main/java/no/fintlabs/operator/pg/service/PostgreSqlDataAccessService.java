@@ -40,14 +40,40 @@ public class PostgreSqlDataAccessService {
         this.jdbcTemplate = jdbcTemplate;
     }
 
+    public boolean databaseExists(String dbName) throws DataAccessException {
+        List<String> results = jdbcTemplate.query("SELECT datname FROM pg_catalog.pg_database WHERE lower(datname) = '" + dbName.toLowerCase() + "'", (rs, rowNum) -> rs.getString("datname"));
+        return results.size() > 0;
+    }
+
+    public boolean schemaExists(String dbName, String schemaName) throws DataAccessException {
+        changeDatabase(dbName);
+        List<String> results = jdbcTemplate.query("SELECT schema_name FROM information_schema.schemata WHERE schema_name = '" + schemaName + "'", (rs, rowNum) -> rs.getString("schema_name"));
+        return results.size() > 0;
+    }
+
+    public boolean userExists(String dbName, String username) throws DataAccessException {
+        changeDatabase(dbName);
+        List<String> results = jdbcTemplate.query("SELECT usename FROM pg_catalog.pg_user WHERE lower(usename) = '" + username.toLowerCase() + "'", (rs, rowNum) -> rs.getString("usename"));
+        return results.size() > 0;
+    }
+
     public void createDb(String dbName) throws DataAccessException {
         jdbcTemplate.execute("CREATE DATABASE " + dbName);
         log.info("Database created: " + dbName);
     }
 
-    private boolean databaseExists(String dbName) throws DataAccessException {
-        List<String> results = jdbcTemplate.query("SELECT datname FROM pg_catalog.pg_database WHERE lower(datname) = '" + dbName.toLowerCase() + "'", (rs, rowNum) -> rs.getString("datname"));
-        return results.size() > 0;
+    public void deleteSchema(String dbName, String schemaName) throws DataAccessException {
+        changeDatabase(dbName);
+        jdbcTemplate.execute("DROP SCHEMA " + schemaName + " CASCADE");
+        log.info("Schema deleted: " + schemaName);
+    }
+
+    public void deleteUser(String dbName, String username) throws DataAccessException {
+        changeDatabase(dbName);
+        jdbcTemplate.execute("REASSIGN OWNED BY " + username + " TO postgres;");
+        jdbcTemplate.execute("DROP OWNED BY " + username + ";");
+        jdbcTemplate.execute( "DROP USER " + username);
+        log.info("User deleted: " + username);
     }
 
     private void changeDatabase(String databaseName) {
