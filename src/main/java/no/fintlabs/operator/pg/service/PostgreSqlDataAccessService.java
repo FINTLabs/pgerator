@@ -70,10 +70,10 @@ public class PostgreSqlDataAccessService {
 
     public void deleteUser(String dbName, String username) throws DataAccessException {
         changeDatabase(dbName);
-        jdbcTemplate.execute("REASSIGN OWNED BY " + username + " TO postgres;");
-        jdbcTemplate.execute("DROP OWNED BY " + username + ";");
-        jdbcTemplate.execute( "DROP USER " + username);
-        log.info("User deleted: " + username);
+        jdbcTemplate.execute("REASSIGN OWNED BY \"" + username + "\" TO postgres;");
+        jdbcTemplate.execute("DROP OWNED BY \"" + username + "\";");
+        jdbcTemplate.execute( "DROP USER \"" + username + "\";");
+        log.info("User deleted:" + username);
     }
 
     private void changeDatabase(String databaseName) {
@@ -97,7 +97,7 @@ public class PostgreSqlDataAccessService {
 
     public void createDbUser(String databaseName, String username, String password) throws DataAccessException {
         changeDatabase(databaseName);
-        String sqlCreateDbUser = "CREATE USER " + username + " WITH PASSWORD '" + password + "'";
+        String sqlCreateDbUser = "CREATE USER \"" + username + "\" WITH PASSWORD '" + password + "'";
         jdbcTemplate.execute(sqlCreateDbUser);
         log.info("User " + username + " created");
     }
@@ -105,8 +105,8 @@ public class PostgreSqlDataAccessService {
 
     public void grantPrivilegeToUser(String databaseName, String schemaName, String username, String privilege) throws DataAccessException {
         changeDatabase(databaseName);
-        String sqlGrantPrivilege = "GRANT " + privilege + " ON ALL TABLES IN SCHEMA " + schemaName + " TO " + username;
-        String sqlGrantDefaultPrivileges = "ALTER DEFAULT PRIVILEGES IN SCHEMA " + schemaName + " GRANT " + privilege + " ON TABLES TO " + username;
+        String sqlGrantPrivilege = "GRANT " + privilege + " ON ALL TABLES IN SCHEMA " + schemaName + " TO \"" + username + "\"";
+        String sqlGrantDefaultPrivileges = "ALTER DEFAULT PRIVILEGES IN SCHEMA " + schemaName + " GRANT " + privilege + " ON TABLES TO \"" + username + "\"";
         jdbcTemplate.execute(sqlGrantPrivilege);
         jdbcTemplate.execute(sqlGrantDefaultPrivileges);
         log.info("Privilege " + privilege + " granted to " + username + " on schema " + schemaName);
@@ -114,7 +114,7 @@ public class PostgreSqlDataAccessService {
 
     public String getUserPrivilegesOnSchema(String databaseName, String schemaName, String username) throws DataAccessException {
         changeDatabase(databaseName);
-        String sqlGetPrivileges = "SELECT grantee, table_schema, privilege_type FROM information_schema.role_table_grants WHERE grantee = '" + username + "' AND table_schema = '" + schemaName + "'";
+        String sqlGetPrivileges = "SELECT grantee, table_schema, privilege_type FROM information_schema.role_table_grants WHERE grantee = \"" + username + "\" AND table_schema = '" + schemaName + "'";
         String sqlCreateTestTable = "CREATE TABLE " + schemaName + ".testtable (id SERIAL PRIMARY KEY, name VARCHAR(255) NOT NULL)";
         String sqlDropTestTable = "DROP TABLE " + schemaName + ".testtable";
 
@@ -122,7 +122,7 @@ public class PostgreSqlDataAccessService {
         jdbcTemplate.execute(sqlCreateTestTable);
 
         List<String> privileges = jdbcTemplate.query(sqlGetPrivileges, (rs, rowNum) -> rs.getString("privilege_type"));
-        log.info("Privileges for " + username + " on schema " + schemaName + ": " + privileges);
+        log.info("Privileges for \"" + username + "\" on schema " + schemaName + ": " + privileges);
 
         log.info("Dropping test table");
         jdbcTemplate.execute(sqlDropTestTable);
