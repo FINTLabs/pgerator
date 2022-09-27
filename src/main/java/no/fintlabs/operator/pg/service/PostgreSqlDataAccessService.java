@@ -49,7 +49,7 @@ public class PostgreSqlDataAccessService {
 
     public boolean schemaExists(String dbName, String schemaName) throws DataAccessException {
         changeDatabase(dbName);
-        List<String> results = jdbcTemplate.query("SELECT schema_name FROM information_schema.schemata WHERE schema_name = '" + schemaName + "'", (rs, rowNum) -> rs.getString("schema_name"));
+        List<String> results = jdbcTemplate.query("SELECT schema_name FROM information_schema.schemata WHERE lower(schema_name) = '" + schemaName.toLowerCase() + "'", (rs, rowNum) -> rs.getString("schema_name"));
         return results.size() > 0;
     }
 
