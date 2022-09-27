@@ -31,9 +31,8 @@ public class SecretService {
             log.debug("Secret for {} is missing. Creating secret.", resource.getMetadata().getName());
             Map<String, String> stringData = new HashMap<>();
 
-            // TODO: Fix StringData keys
-            stringData.put("fint.db.username", username);
-            stringData.put("fint.db.password", password);
+            stringData.put(resource.getMetadata().getName() + ".db.username", username);
+            stringData.put(resource.getMetadata().getName() + ".db.password", password);
 
             Secret secret = new SecretBuilder()
                     .withNewMetadata()
@@ -47,6 +46,16 @@ public class SecretService {
 
             kubernetesClient.secrets().inNamespace(resource.getMetadata().getNamespace()).createOrReplace(secret);
         }
+    }
+
+
+    public String getSecretIfExists(Context<PGSchemaAndUserResource> context, PGSchemaAndUserResource resource, String key) {
+        if (context.getSecondaryResource(Secret.class).isPresent()) {
+            log.debug("Secret exists for resource {}", resource.getMetadata().getName());
+            String encodedUsername = context.getSecondaryResource(Secret.class).get().getData().get(key);
+            return new String(java.util.Base64.getDecoder().decode(encodedUsername));
+        }
+        return null;
     }
 
     public void deleteSecretIfExists(Context<PGSchemaAndUserResource> context) {
