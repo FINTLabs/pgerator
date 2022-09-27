@@ -9,8 +9,10 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 @Slf4j
 @Component
@@ -80,12 +82,18 @@ public class PostgreSqlDataAccessService {
         if (!databaseExists(databaseName)) {
             createDb(databaseName);
         }
-        DataSource dataSource = DataSourceBuilder.create()
-                .url(environment.getProperty("spring.datasource.base-url") + databaseName.toLowerCase())
-                .username(environment.getProperty("spring.datasource.username"))
-                .password(environment.getProperty("spring.datasource.password"))
-                .build();
-        jdbcTemplate.setDataSource(dataSource);
+        try {
+            if (!Objects.equals(jdbcTemplate.getDataSource().getConnection().getCatalog().toLowerCase(), databaseName.toLowerCase())) {
+                DataSource dataSource = DataSourceBuilder.create()
+                        .url(environment.getProperty("spring.datasource.base-url") + databaseName.toLowerCase())
+                        .username(environment.getProperty("spring.datasource.username"))
+                        .password(environment.getProperty("spring.datasource.password"))
+                        .build();
+                jdbcTemplate.setDataSource(dataSource);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void createSchema(String databaseName, String schemaName) throws DataAccessException {
