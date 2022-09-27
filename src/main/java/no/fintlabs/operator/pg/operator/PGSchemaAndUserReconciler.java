@@ -36,36 +36,49 @@ public class PGSchemaAndUserReconciler implements Reconciler<PGSchemaAndUserReso
     public UpdateControl<PGSchemaAndUserResource> reconcile(PGSchemaAndUserResource resource, Context<PGSchemaAndUserResource> context) {
         log.debug("Reconciling {}", resource.getMetadata().getName());
 
-        // TODO: get username and pw
+        if (context.getSecondaryResource(Secret.class).isPresent()) {
+            log.debug("Secret exists for resource {}", resource.getMetadata().getName());
+            return UpdateControl.noUpdate();
+        }
+
         String username = resource.getMetadata().getName() + "_" + uniqId();
-        String pw = RandomStringUtils.randomAlphanumeric(32);
+        String password = RandomStringUtils.randomAlphanumeric(32);
         String privilege = "all";
 
-        secretService.createSecretIfNeeded(context, resource, username, pw);
+        secretService.createSecretIfNeeded(context, resource, username, password);
 
-        // TODO: check if user, database and/or schema exists
+        if (!dataAccessService.databaseExists(resource.getSpec().getDatabaseName())) {
+            dataAccessService.createDb(resource.getSpec().getDatabaseName());
+        }
+        if (!dataAccessService.schemaExists(resource.getSpec().getDatabaseName(), resource.getSpec().getSchemaName())) {
+            dataAccessService.createSchema(resource.getSpec().getDatabaseName(), resource.getSpec().getSchemaName());
+        }
+        if (!dataAccessService.userExists(resource.getSpec().getDatabaseName(), username)) {
+            dataAccessService.createDbUser(resource.getSpec().getDatabaseName(), username, password);
+        }
 
-//        dataAccessService.createDb(resource.getSpec().getDatabaseName());
-//        dataAccessService.createSchema(resource.getSpec().getDatabaseName(), resource.getSpec().getSchemaName());
-//        dataAccessService.createDbUser(resource.getSpec().getDatabaseName(), username, pw);
-//        dataAccessService.grantPrivilegeToUser(resource.getSpec().getDatabaseName(), resource.getSpec().getSchemaName(), username, privilege);
-
+        dataAccessService.grantPrivilegeToUser(resource.getSpec().getDatabaseName(), resource.getSpec().getSchemaName(), username, privilege);
 
         return UpdateControl.updateStatus(resource);
     }
+
     private String uniqId() {
         return RandomStringUtils.randomAlphanumeric(6);
     }
 
     @Override
     public DeleteControl cleanup(PGSchemaAndUserResource resource, Context<PGSchemaAndUserResource> context) {
-        // TODO: Implement method
-        // should:
-        // - delete secret from k8s
-        // - delete database? Check if other use same db first?
-        // - delete schema
-        // - delete user
-        return null;
+        if (resource.getSpec().isDeleteOnCleanup()) {
+            if (dataAccessService.schemaExists(resource.getSpec().getDatabaseName(), resource.getSpec().getSchemaName())) {
+                dataAccessService.deleteSchema(resource.getSpec().getDatabaseName(), resource.getSpec().getSchemaName());
+            }
+            String username = secretService.getSecretIfExists(context, resource, resource.getMetadata().getName() + ".db.username");
+            if (dataAccessService.userExists(resource.getSpec().getDatabaseName(), username)) {
+                dataAccessService.deleteUser(resource.getSpec().getDatabaseName(), username);
+            }
+        }
+        secretService.deleteSecretIfExists(context);
+        return DeleteControl.defaultDelete();
     }
 
     @Override
