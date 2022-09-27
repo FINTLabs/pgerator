@@ -83,8 +83,10 @@ public class PGSchemaAndUserReconciler implements Reconciler<PGSchemaAndUserReso
 
     @Override
     public ErrorStatusUpdateControl<PGSchemaAndUserResource> updateErrorStatus(PGSchemaAndUserResource resource, Context<PGSchemaAndUserResource> context, Exception e) {
-        // TODO: Implement method
-        return null;
+        PGSchemaAndUserStatus resourceStatus = resource.getStatus() ;
+        resourceStatus.setErrorMessage(e.getMessage());
+        resource.setStatus(resourceStatus);
+        return ErrorStatusUpdateControl.updateStatus(resource);
     }
 
     @Override
