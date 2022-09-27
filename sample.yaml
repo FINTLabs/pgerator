@@ -1,8 +1,8 @@
 apiVersion: "fintlabs.no/v1alpha1"
 kind: PGSchemaAndUserResource
 metadata:
-  name: fint-flyt-schema-user
+  name: fint-flyt-schema-user-test
 spec:
-  databaseName: x
-  schemaName: x
-  deleteOnCleanup: false
+  databaseName: testSampleDb
+  schemaName: testSampleSchema
+  deleteOnCleanup: true
