@@ -59,7 +59,7 @@ public class PGSchemaAndUserReconciler implements Reconciler<PGSchemaAndUserReso
 
         dataAccessService.grantPrivilegeToUser(resource.getSpec().getDatabaseName(), resource.getSpec().getSchemaName(), username, privilege);
 
-        return UpdateControl.updateStatus(resource);
+        return UpdateControl.updateResourceAndStatus(resource);
     }
 
     private String uniqId() {
@@ -69,12 +69,18 @@ public class PGSchemaAndUserReconciler implements Reconciler<PGSchemaAndUserReso
     @Override
     public DeleteControl cleanup(PGSchemaAndUserResource resource, Context<PGSchemaAndUserResource> context) {
         if (resource.getSpec().isDeleteOnCleanup()) {
-            if (dataAccessService.schemaExists(resource.getSpec().getDatabaseName(), resource.getSpec().getSchemaName())) {
-                dataAccessService.deleteSchema(resource.getSpec().getDatabaseName(), resource.getSpec().getSchemaName());
+            String databaseName = resource.getSpec().getDatabaseName();
+            String schemaName = resource.getSpec().getSchemaName();
+            if (dataAccessService.schemaExists(databaseName, schemaName)) {
+                dataAccessService.deleteSchema(databaseName, schemaName);
             }
             String username = secretService.getSecretIfExists(context, resource, resource.getMetadata().getName() + ".db.username");
-            if (dataAccessService.userExists(resource.getSpec().getDatabaseName(), username)) {
-                dataAccessService.deleteUser(resource.getSpec().getDatabaseName(), username);
+            if (dataAccessService.userExists(databaseName, username)) {
+                dataAccessService.deleteUser(databaseName, username);
+            }
+            if (dataAccessService.schemaExists(databaseName, schemaName) ||
+                    dataAccessService.userExists(databaseName, username)) {
+                log.error("Failed to delete schema or user");
             }
         }
         secretService.deleteSecretIfExists(context);
