@@ -9,6 +9,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
@@ -17,6 +18,8 @@ import java.util.Objects;
 @Slf4j
 @Component
 public class PostgreSqlDataAccessService {
+
+    private String currentDatabase;
 
     @Autowired
     private Environment environment;
@@ -40,6 +43,11 @@ public class PostgreSqlDataAccessService {
 
     public PostgreSqlDataAccessService(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
+        try {
+            currentDatabase = jdbcTemplate.getDataSource().getConnection().getCatalog();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public boolean databaseExists(String dbName) throws DataAccessException {
@@ -82,17 +90,15 @@ public class PostgreSqlDataAccessService {
         if (!databaseExists(databaseName)) {
             createDb(databaseName);
         }
-        try {
-            if (!Objects.equals(jdbcTemplate.getDataSource().getConnection().getCatalog().toLowerCase(), databaseName.toLowerCase())) {
-                DataSource dataSource = DataSourceBuilder.create()
-                        .url(environment.getProperty("spring.datasource.base-url") + databaseName.toLowerCase())
-                        .username(environment.getProperty("spring.datasource.username"))
-                        .password(environment.getProperty("spring.datasource.password"))
-                        .build();
-                jdbcTemplate.setDataSource(dataSource);
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+        if (!currentDatabase.equalsIgnoreCase(databaseName)) {
+            DataSource dataSource = DataSourceBuilder.create()
+                    .url(environment.getProperty("spring.datasource.base-url") + databaseName.toLowerCase())
+                    .username(environment.getProperty("spring.datasource.username"))
+                    .password(environment.getProperty("spring.datasource.password"))
+                    .build();
+            jdbcTemplate.setDataSource(dataSource);
+            currentDatabase = databaseName;
+            log.info("Database changed to: " + databaseName);
         }
     }
 
