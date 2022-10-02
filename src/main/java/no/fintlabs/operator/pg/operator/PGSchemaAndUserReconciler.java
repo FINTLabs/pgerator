@@ -84,6 +84,7 @@ public class PGSchemaAndUserReconciler implements Reconciler<PGSchemaAndUserReso
             }
         }
         secretService.deleteSecretIfExists(context);
+        log.info("Cleanup done for {}", resource.getMetadata().getName());
         return DeleteControl.defaultDelete();
     }
 
