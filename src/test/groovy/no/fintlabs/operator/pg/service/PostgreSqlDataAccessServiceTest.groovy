@@ -11,7 +11,7 @@ class PostgreSqlDataAccessServiceTest extends Specification {
     @Autowired
     public PostgreSqlDataAccessService postgreSqlDataAccessService
 
-    def "Creating a database with a given name, throws no exceptions"() {
+    def "Creating a database with a given name creates a database without throwing exceptions"() {
         given:
         String dbName = "testcreatedb"
 
@@ -19,10 +19,11 @@ class PostgreSqlDataAccessServiceTest extends Specification {
         postgreSqlDataAccessService.createDb(dbName)
 
         then:
+        postgreSqlDataAccessService.databaseExists(dbName)
         noExceptionThrown()
     }
 
-    def "Creating a schema with a given name throws no exceptions"() {
+    def "Creating a schema with a given name creates a schema without throwing exceptions"() {
         given:
         String databaseName = "schematestdb"
         String schemaName = "testcreateschema"
@@ -31,10 +32,11 @@ class PostgreSqlDataAccessServiceTest extends Specification {
         postgreSqlDataAccessService.createSchema(databaseName, schemaName)
 
         then:
+        postgreSqlDataAccessService.schemaExists(databaseName, schemaName)
         noExceptionThrown()
     }
 
-    def "Create a database user with a given username and password throws no exceptions"() {
+    def "Create a database user with a given username and password creates a user without throwing exceptions"() {
         given:
         String databaseName = "usertestdb"
         String username = "testcreatedbuser"
@@ -44,6 +46,7 @@ class PostgreSqlDataAccessServiceTest extends Specification {
         postgreSqlDataAccessService.createDbUser(databaseName, username, password)
 
         then:
+        postgreSqlDataAccessService.userExists(databaseName, username)
         noExceptionThrown()
     }
 
@@ -60,11 +63,10 @@ class PostgreSqlDataAccessServiceTest extends Specification {
         postgreSqlDataAccessService.createSchema(databaseName, schemaName)
         postgreSqlDataAccessService.grantPrivilegeToUser(databaseName, schemaName, username, privilege[0])
         postgreSqlDataAccessService.grantPrivilegeToUser(databaseName, schemaName, username, privilege[1])
-        String privileges = postgreSqlDataAccessService.getUserPrivilegesOnSchema(databaseName, schemaName, username)
 
         then:
         noExceptionThrown()
-        privileges == "INSERT,SELECT"
+        postgreSqlDataAccessService.getUserPrivilegesOnSchema(databaseName, schemaName, username) == "INSERT,SELECT"
     }
 
     def "Creating a user and schema with privileges throws no exceptions and sets privileges"() {
@@ -77,11 +79,10 @@ class PostgreSqlDataAccessServiceTest extends Specification {
 
         when:
         postgreSqlDataAccessService.createSchemaUserAndSetPrivileges(databaseName, schemaName, username, password, privileges)
-        String getPrivileges = postgreSqlDataAccessService.getUserPrivilegesOnSchema(databaseName, schemaName, username)
 
         then:
         noExceptionThrown()
-        getPrivileges == "INSERT,SELECT"
+        postgreSqlDataAccessService.getUserPrivilegesOnSchema(databaseName, schemaName, username) == "INSERT,SELECT"
     }
 
     def "Creating a database that already exists throws DataAccessException"(){
