@@ -128,7 +128,7 @@ public class PostgreSqlDataAccessService {
 
     public String getUserPrivilegesOnSchema(String databaseName, String schemaName, String username) throws DataAccessException {
         changeDatabase(databaseName);
-        String sqlGetPrivileges = "SELECT grantee, table_schema, privilege_type FROM information_schema.role_table_grants WHERE grantee = \"" + username + "\" AND table_schema = '" + schemaName + "'";
+        String sqlGetPrivileges = "SELECT grantee, table_schema, privilege_type FROM information_schema.role_table_grants WHERE grantee = '" + username + "' AND table_schema = '" + schemaName + "'";
         String sqlCreateTestTable = "CREATE TABLE " + schemaName + ".testtable (id SERIAL PRIMARY KEY, name VARCHAR(255) NOT NULL)";
         String sqlDropTestTable = "DROP TABLE " + schemaName + ".testtable";
 
