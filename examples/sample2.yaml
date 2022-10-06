@@ -1,0 +1,8 @@
+apiVersion: "fintlabs.no/v1alpha1"
+kind: PGSchemaAndUser
+metadata:
+  name: sampleuser2
+spec:
+  databaseName: sampledb2
+  schemaName: sampleschema2
+  deleteOnCleanup: true

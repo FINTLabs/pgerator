@@ -1,8 +1,0 @@
-apiVersion: "fintlabs.no/v1alpha1"
-kind: PGSchemaAndUserResource
-metadata:
-  name: fint-flyt-schema-user-test
-spec:
-  databaseName: testSampleDb
-  schemaName: testSampleSchema
-  deleteOnCleanup: true
