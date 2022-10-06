@@ -39,3 +39,4 @@ out/
 src/main/resources/application.properties
 
 lib/
+src/main/resources/application.yaml
