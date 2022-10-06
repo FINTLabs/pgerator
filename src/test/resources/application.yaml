@@ -1,0 +1,12 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: create
+  datasource:
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+    base-url: jdbc:tc:postgresql:14.5:///
+    url: jdbc:tc:postgresql:14.5:///integration-tests-db
+    username: test
+    password: test
+  application:
+    name: pgerator
