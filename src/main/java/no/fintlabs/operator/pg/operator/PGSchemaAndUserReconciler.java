@@ -35,6 +35,7 @@ public class PGSchemaAndUserReconciler implements Reconciler<PGSchemaAndUserCRD>
     @Override
     public UpdateControl<PGSchemaAndUserCRD> reconcile(PGSchemaAndUserCRD resource, Context<PGSchemaAndUserCRD> context) {
         log.debug("Reconciling {}", resource.getMetadata().getName());
+        CrdValidator.validate(resource);
 
         if (context.getSecondaryResource(Secret.class).isPresent()) {
             log.debug("Secret exists for resource {}", resource.getMetadata().getName());
