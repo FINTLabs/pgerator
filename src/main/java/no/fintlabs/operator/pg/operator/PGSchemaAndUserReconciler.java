@@ -17,10 +17,10 @@ import java.util.Map;
 @Slf4j
 @Component
 @ControllerConfiguration
-public class PGSchemaAndUserReconciler implements Reconciler<PGSchemaAndUserResource>,
-        EventSourceInitializer<PGSchemaAndUserResource>,
-        ErrorStatusHandler<PGSchemaAndUserResource>,
-        Cleaner<PGSchemaAndUserResource> {
+public class PGSchemaAndUserReconciler implements Reconciler<PGSchemaAndUserCRD>,
+        EventSourceInitializer<PGSchemaAndUserCRD>,
+        ErrorStatusHandler<PGSchemaAndUserCRD>,
+        Cleaner<PGSchemaAndUserCRD> {
 
 
     private final PostgreSqlDataAccessService dataAccessService;
@@ -33,7 +33,7 @@ public class PGSchemaAndUserReconciler implements Reconciler<PGSchemaAndUserReso
     }
 
     @Override
-    public UpdateControl<PGSchemaAndUserResource> reconcile(PGSchemaAndUserResource resource, Context<PGSchemaAndUserResource> context) {
+    public UpdateControl<PGSchemaAndUserCRD> reconcile(PGSchemaAndUserCRD resource, Context<PGSchemaAndUserCRD> context) {
         log.debug("Reconciling {}", resource.getMetadata().getName());
 
         if (context.getSecondaryResource(Secret.class).isPresent()) {
@@ -67,7 +67,7 @@ public class PGSchemaAndUserReconciler implements Reconciler<PGSchemaAndUserReso
     }
 
     @Override
-    public DeleteControl cleanup(PGSchemaAndUserResource resource, Context<PGSchemaAndUserResource> context) {
+    public DeleteControl cleanup(PGSchemaAndUserCRD resource, Context<PGSchemaAndUserCRD> context) {
         if (resource.getSpec().isDeleteOnCleanup()) {
             String databaseName = resource.getSpec().getDatabaseName();
             String schemaName = resource.getSpec().getSchemaName();
@@ -89,7 +89,7 @@ public class PGSchemaAndUserReconciler implements Reconciler<PGSchemaAndUserReso
     }
 
     @Override
-    public ErrorStatusUpdateControl<PGSchemaAndUserResource> updateErrorStatus(PGSchemaAndUserResource resource, Context<PGSchemaAndUserResource> context, Exception e) {
+    public ErrorStatusUpdateControl<PGSchemaAndUserCRD> updateErrorStatus(PGSchemaAndUserCRD resource, Context<PGSchemaAndUserCRD> context, Exception e) {
         PGSchemaAndUserStatus resourceStatus = resource.getStatus() ;
         resourceStatus.setErrorMessage(e.getMessage());
         resource.setStatus(resourceStatus);
@@ -97,7 +97,7 @@ public class PGSchemaAndUserReconciler implements Reconciler<PGSchemaAndUserReso
     }
 
     @Override
-    public Map<String, EventSource> prepareEventSources(EventSourceContext<PGSchemaAndUserResource> context) {
+    public Map<String, EventSource> prepareEventSources(EventSourceContext<PGSchemaAndUserCRD> context) {
         return EventSourceInitializer
                 .nameEventSources(
                         new InformerEventSource<>(
