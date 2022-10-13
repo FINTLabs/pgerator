@@ -9,11 +9,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
 @Slf4j
 @Component
@@ -51,38 +49,38 @@ public class PostgreSqlDataAccessService {
     }
 
     public boolean databaseExists(String dbName) throws DataAccessException {
-        List<String> results = jdbcTemplate.query("SELECT datname FROM pg_catalog.pg_database WHERE lower(datname) = '" + dbName.toLowerCase() + "'", (rs, rowNum) -> rs.getString("datname"));
+        List<String> results = jdbcTemplate.query(SqlQueryFactory.generateDatabaseExistsSql(dbName), (rs, rowNum) -> rs.getString("datname"));
         return results.size() > 0;
     }
 
     public boolean schemaExists(String dbName, String schemaName) throws DataAccessException {
         changeDatabase(dbName);
-        List<String> results = jdbcTemplate.query("SELECT schema_name FROM information_schema.schemata WHERE lower(schema_name) = '" + schemaName.toLowerCase() + "'", (rs, rowNum) -> rs.getString("schema_name"));
+        List<String> results = jdbcTemplate.query(SqlQueryFactory.generateSchemaExistsSql(schemaName), (rs, rowNum) -> rs.getString("schema_name"));
         return results.size() > 0;
     }
 
     public boolean userExists(String dbName, String username) throws DataAccessException {
         changeDatabase(dbName);
-        List<String> results = jdbcTemplate.query("SELECT usename FROM pg_catalog.pg_user WHERE lower(usename) = '" + username.toLowerCase() + "'", (rs, rowNum) -> rs.getString("usename"));
+        List<String> results = jdbcTemplate.query(SqlQueryFactory.generateUserExistsSql(username), (rs, rowNum) -> rs.getString("usename"));
         return results.size() > 0;
     }
 
     public void createDb(String dbName) throws DataAccessException {
-        jdbcTemplate.execute("CREATE DATABASE " + dbName);
+        jdbcTemplate.execute(SqlQueryFactory.generateCreateDatabaseSql(dbName));
         log.info("Database created: " + dbName);
     }
 
     public void deleteSchema(String dbName, String schemaName) throws DataAccessException {
         changeDatabase(dbName);
-        jdbcTemplate.execute("DROP SCHEMA " + schemaName + " CASCADE");
+        jdbcTemplate.execute(SqlQueryFactory.generateDeleteSchemaSql(schemaName));
         log.info("Schema deleted: " + schemaName);
     }
 
     public void deleteUser(String dbName, String username) throws DataAccessException {
         changeDatabase(dbName);
-        jdbcTemplate.execute("REASSIGN OWNED BY \"" + username + "\" TO postgres;");
-        jdbcTemplate.execute("DROP OWNED BY \"" + username + "\";");
-        jdbcTemplate.execute( "DROP USER \"" + username + "\";");
+        jdbcTemplate.execute(SqlQueryFactory.generateReassignOwnedFromUserToUserSql(username, "postgres"));
+        jdbcTemplate.execute(SqlQueryFactory.generateDropOwnedByUserSql(username));
+        jdbcTemplate.execute( SqlQueryFactory.generateDropUserSql(username));
         log.info("User deleted:" + username);
     }
 
@@ -104,42 +102,35 @@ public class PostgreSqlDataAccessService {
 
     public void createSchema(String databaseName, String schemaName) throws DataAccessException {
         changeDatabase(databaseName);
-        String sqlCreateSchema = "CREATE SCHEMA IF NOT EXISTS " + schemaName;
-        jdbcTemplate.execute(sqlCreateSchema);
+        jdbcTemplate.execute(SqlQueryFactory.generateCreateSchemaSql(schemaName));
         log.info("Schema created: " + schemaName);
     }
 
     public void createDbUser(String databaseName, String username, String password) throws DataAccessException {
         changeDatabase(databaseName);
-        String sqlCreateDbUser = "CREATE USER \"" + username + "\" WITH PASSWORD '" + password + "'";
-        jdbcTemplate.execute(sqlCreateDbUser);
+        jdbcTemplate.execute(SqlQueryFactory.generateCreateDatabaseUserSql(username, password));
         log.info("User " + username + " created");
     }
 
 
     public void grantPrivilegeToUser(String databaseName, String schemaName, String username, String privilege) throws DataAccessException {
         changeDatabase(databaseName);
-        String sqlGrantPrivilege = "GRANT " + privilege + " ON ALL TABLES IN SCHEMA " + schemaName + " TO \"" + username + "\"";
-        String sqlGrantDefaultPrivileges = "ALTER DEFAULT PRIVILEGES IN SCHEMA " + schemaName + " GRANT " + privilege + " ON TABLES TO \"" + username + "\"";
-        jdbcTemplate.execute(sqlGrantPrivilege);
-        jdbcTemplate.execute(sqlGrantDefaultPrivileges);
+        jdbcTemplate.execute(SqlQueryFactory.generateGrantPrivilegeSql(schemaName, privilege, username));
+        jdbcTemplate.execute(SqlQueryFactory.generateGrantDefaultPrivilegesSql(schemaName, privilege, username));
         log.info("Privilege " + privilege + " granted to " + username + " on schema " + schemaName);
     }
 
     public String getUserPrivilegesOnSchema(String databaseName, String schemaName, String username) throws DataAccessException {
         changeDatabase(databaseName);
-        String sqlGetPrivileges = "SELECT grantee, table_schema, privilege_type FROM information_schema.role_table_grants WHERE grantee = '" + username + "' AND table_schema = '" + schemaName + "'";
-        String sqlCreateTestTable = "CREATE TABLE " + schemaName + ".testtable (id SERIAL PRIMARY KEY, name VARCHAR(255) NOT NULL)";
-        String sqlDropTestTable = "DROP TABLE " + schemaName + ".testtable";
 
         log.info("Creating test table");
-        jdbcTemplate.execute(sqlCreateTestTable);
+        jdbcTemplate.execute(SqlQueryFactory.generateCreateTestTable(schemaName));
 
-        List<String> privileges = jdbcTemplate.query(sqlGetPrivileges, (rs, rowNum) -> rs.getString("privilege_type"));
+        List<String> privileges = jdbcTemplate.query(SqlQueryFactory.generateGetPrivileges(schemaName, username), (rs, rowNum) -> rs.getString("privilege_type"));
         log.info("Privileges for \"" + username + "\" on schema " + schemaName + ": " + privileges);
 
         log.info("Dropping test table");
-        jdbcTemplate.execute(sqlDropTestTable);
+        jdbcTemplate.execute(SqlQueryFactory.generateDropTestTableSql(schemaName));
 
         return String.join(",", privileges);
     }
