@@ -1,8 +1,8 @@
 plugins {
-	id 'org.springframework.boot' version '2.7.3'
-	id 'io.spring.dependency-management' version '1.0.13.RELEASE'
-	id 'java'
-	id 'groovy'
+    id 'org.springframework.boot' version '2.7.3'
+    id 'io.spring.dependency-management' version '1.0.13.RELEASE'
+    id 'java'
+    id 'groovy'
 }
 
 group = 'no.fintlabs'
@@ -10,48 +10,46 @@ version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '17'
 
 jar {
-	enabled = false
+    enabled = false
 }
 
 repositories {
-	mavenCentral()
+    mavenCentral()
+    maven {
+        url "https://repo.fintlabs.no/releases"
+    }
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-data-jdbc'
-	implementation 'org.springframework.boot:spring-boot-starter-actuator'
-	implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jdbc'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
 
-	compileOnly 'org.projectlombok:lombok'
+    compileOnly 'org.projectlombok:lombok'
 
-	annotationProcessor 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
 
-	annotationProcessor "io.javaoperatorsdk:operator-framework:3.2.0"
-	implementation "io.javaoperatorsdk:operator-framework-spring-boot-starter:3.2.0"
+    implementation 'no.fintlabs:flais-operator-starter:1.0.0-rc-3'
 
-	runtimeOnly 'org.postgresql:postgresql'
+    runtimeOnly 'org.postgresql:postgresql'
 
-	annotationProcessor 'io.fabric8:crd-generator-apt:6.1.1'
+    annotationProcessor 'io.fabric8:crd-generator-apt:6.1.1'
 
-
-	testImplementation 'org.spockframework:spock-core:2.2-groovy-3.0'
-	testImplementation 'org.spockframework:spock-spring:2.2-groovy-3.0'
-	testImplementation 'org.codehaus.groovy:groovy-all:3.0.8'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
 tasks.named('test') {
-	useJUnitPlatform()
+    useJUnitPlatform()
 }
 tasks.register('copyResourceDefinition', Copy) {
-	from "$buildDir/classes/java/main/META-INF/fabric8/pgschemaandusers.fintlabs.no-v1.yml"
-	into "$projectDir/kustomize/base"
+    from "$buildDir/classes/java/main/META-INF/fabric8/pgschemaandusers.fintlabs.no-v1.yml"
+    into "$projectDir/kustomize/base"
 }
 
 tasks.named("build") { finalizedBy("copyResourceDefinition") }
 
 tasks.named("clean") {
-	doLast {
-		project.delete("$projectDir/kustomize/base/pgschemaandusers.fintlabs.no-v1.yml")
-	}
+    doLast {
+        project.delete("$projectDir/kustomize/base/pgschemaandusers.fintlabs.no-v1.yml")
+    }
 }
