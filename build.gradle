@@ -33,7 +33,7 @@ dependencies {
 
     runtimeOnly 'org.postgresql:postgresql'
 
-    annotationProcessor 'io.fabric8:crd-generator-apt:6.1.1'
+    annotationProcessor 'io.fabric8:crd-generator-apt:6.2.0'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }

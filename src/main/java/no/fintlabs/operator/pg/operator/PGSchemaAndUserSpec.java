@@ -1,14 +1,10 @@
 package no.fintlabs.operator.pg.operator;
 
 import lombok.*;
+import no.fintlabs.FlaisSpec;
 
-@Getter
-@Setter
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class PGSchemaAndUserSpec {
-
+@Data
+public class PGSchemaAndUserSpec implements FlaisSpec {
     private String databaseName;
     private String schemaName;
     private boolean deleteOnCleanup;

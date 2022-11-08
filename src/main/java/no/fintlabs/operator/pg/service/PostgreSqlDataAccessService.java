@@ -1,6 +1,7 @@
 package no.fintlabs.operator.pg.service;
 
 import lombok.extern.slf4j.Slf4j;
+import no.fintlabs.operator.pg.model.PGSchemaAndUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.core.env.Environment;
@@ -12,6 +13,7 @@ import javax.sql.DataSource;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @Component
@@ -65,6 +67,31 @@ public class PostgreSqlDataAccessService {
         return results.size() > 0;
     }
 
+    public String getUser(String dbName, String username) throws DataAccessException {
+        changeDatabase(dbName);
+        List<String> results = jdbcTemplate.query(SqlQueryFactory.generateUserExistsSql(username), (rs, rowNum) -> rs.getString("usename"));
+        return results.get(0);
+    }
+
+    public String getSchema(String dbName, String schemaName) throws DataAccessException {
+        changeDatabase(dbName);
+        List<String> results = jdbcTemplate.query(SqlQueryFactory.generateSchemaExistsSql(schemaName), (rs, rowNum) -> rs.getString("schema_name"));
+        return results.get(0);
+    }
+
+    public Set<PGSchemaAndUser> getSchemaAndUser(String dbName, String schemaName, String username) {
+        changeDatabase(dbName);
+        List<String> userResults = jdbcTemplate.query(SqlQueryFactory.generateUserExistsSql(username), (rs, rowNum) -> rs.getString("usename"));
+        List<String> schemaResults = jdbcTemplate.query(SqlQueryFactory.generateSchemaExistsSql(schemaName), (rs, rowNum) -> rs.getString("schema_name"));
+        if (userResults.size() > 0 && schemaResults.size() > 0) {
+            return Set.of(PGSchemaAndUser.builder()
+                    .username(userResults.get(0))
+                    .schemaName(schemaResults.get(0))
+                    .build());
+        }
+        return Set.of();
+    }
+
     public void createDb(String dbName) throws DataAccessException {
         jdbcTemplate.execute(SqlQueryFactory.generateCreateDatabaseSql(dbName));
         log.info("Database created: " + dbName);
@@ -80,7 +107,7 @@ public class PostgreSqlDataAccessService {
         changeDatabase(dbName);
         jdbcTemplate.execute(SqlQueryFactory.generateReassignOwnedFromUserToUserSql(username, "postgres"));
         jdbcTemplate.execute(SqlQueryFactory.generateDropOwnedByUserSql(username));
-        jdbcTemplate.execute( SqlQueryFactory.generateDropUserSql(username));
+        jdbcTemplate.execute(SqlQueryFactory.generateDropUserSql(username));
         log.info("User deleted:" + username);
     }
 
