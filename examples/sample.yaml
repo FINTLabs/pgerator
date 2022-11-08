@@ -2,6 +2,13 @@ apiVersion: "fintlabs.no/v1alpha1"
 kind: PGSchemaAndUser
 metadata:
   name: sampleuser
+  labels:
+    app.kubernetes.io/name: sample-user
+    app.kubernetes.io/instance: sample-test
+    app.kubernetes.io/version: latest
+    app.kubernetes.io/component: sample
+    app.kubernetes.io/part-of: sample-test
+    fintlabs.no/team: sample-test
 spec:
   databaseName: sampledb
   schemaName: sampleschema

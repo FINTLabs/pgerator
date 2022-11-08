@@ -1,4 +1,4 @@
-package no.fintlabs.operator.pg.controller;
+package no.fintlabs.controller;
 
 import lombok.Data;
 
