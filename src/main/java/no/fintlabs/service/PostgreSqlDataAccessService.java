@@ -67,18 +67,6 @@ public class PostgreSqlDataAccessService {
         return results.size() > 0;
     }
 
-    public String getUser(String dbName, String username) throws DataAccessException {
-        changeDatabase(dbName);
-        List<String> results = jdbcTemplate.query(SqlQueryFactory.generateUserExistsSql(username), (rs, rowNum) -> rs.getString("usename"));
-        return results.get(0);
-    }
-
-    public String getSchema(String dbName, String schemaName) throws DataAccessException {
-        changeDatabase(dbName);
-        List<String> results = jdbcTemplate.query(SqlQueryFactory.generateSchemaExistsSql(schemaName), (rs, rowNum) -> rs.getString("schema_name"));
-        return results.get(0);
-    }
-
     public Set<PGSchemaAndUser> getSchemaAndUser(String dbName, String schemaName, String username) {
         changeDatabase(dbName);
         List<String> userResults = jdbcTemplate.query(SqlQueryFactory.generateUserExistsSql(username), (rs, rowNum) -> rs.getString("usename"));

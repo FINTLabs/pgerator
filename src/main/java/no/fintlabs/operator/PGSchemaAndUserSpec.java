@@ -1,6 +1,6 @@
 package no.fintlabs.operator;
 
-import lombok.*;
+import lombok.Data;
 import no.fintlabs.FlaisSpec;
 
 @Data
