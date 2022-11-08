@@ -1,4 +1,4 @@
-package no.fintlabs.operator.pg.operator;
+package no.fintlabs.operator;
 
 import lombok.extern.slf4j.Slf4j;
 

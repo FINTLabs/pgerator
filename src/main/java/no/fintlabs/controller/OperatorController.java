@@ -1,7 +1,8 @@
-package no.fintlabs.operator.pg.controller;
+package no.fintlabs.controller;
 
-import no.fintlabs.operator.pg.model.*;
-import no.fintlabs.operator.pg.service.PostgreSqlDataAccessService;
+import no.fintlabs.model.*;
+import no.fintlabs.model.*;
+import no.fintlabs.service.PostgreSqlDataAccessService;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

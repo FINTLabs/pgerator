@@ -1,4 +1,4 @@
-package no.fintlabs.operator.pg.operator;
+package no.fintlabs.operator;
 
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
@@ -7,7 +7,7 @@ import io.javaoperatorsdk.operator.api.reconciler.Context;
 import lombok.extern.slf4j.Slf4j;
 import no.fintlabs.FlaisKubernetesDependentResource;
 import no.fintlabs.FlaisWorkflow;
-import no.fintlabs.operator.pg.model.PGSchemaAndUser;
+import no.fintlabs.model.PGSchemaAndUser;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;

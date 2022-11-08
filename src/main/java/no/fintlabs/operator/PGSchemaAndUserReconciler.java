@@ -1,4 +1,4 @@
-package no.fintlabs.operator.pg.operator;
+package no.fintlabs.operator;
 
 import io.javaoperatorsdk.operator.api.reconciler.ControllerConfiguration;
 import io.javaoperatorsdk.operator.api.reconciler.dependent.Deleter;

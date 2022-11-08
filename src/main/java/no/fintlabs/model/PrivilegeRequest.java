@@ -1,4 +1,4 @@
-package no.fintlabs.operator.pg.model;
+package no.fintlabs.model;
 
 import lombok.Data;
 

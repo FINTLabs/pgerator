@@ -1,7 +1,7 @@
-package no.fintlabs.operator.pg.service;
+package no.fintlabs.service;
 
 import lombok.extern.slf4j.Slf4j;
-import no.fintlabs.operator.pg.model.PGSchemaAndUser;
+import no.fintlabs.model.PGSchemaAndUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.core.env.Environment;

@@ -1,4 +1,4 @@
-package no.fintlabs.operator.pg.operator;
+package no.fintlabs.operator;
 
 import no.fintlabs.FlaisWorkflow;
 import org.springframework.stereotype.Component;

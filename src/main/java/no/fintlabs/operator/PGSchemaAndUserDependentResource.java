@@ -1,10 +1,10 @@
-package no.fintlabs.operator.pg.operator;
+package no.fintlabs.operator;
 
 
 import io.javaoperatorsdk.operator.api.reconciler.Context;
 import no.fintlabs.FlaisExternalDependentResource;
-import no.fintlabs.operator.pg.model.PGSchemaAndUser;
-import no.fintlabs.operator.pg.service.PostgreSqlDataAccessService;
+import no.fintlabs.model.PGSchemaAndUser;
+import no.fintlabs.service.PostgreSqlDataAccessService;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.stereotype.Component;
 

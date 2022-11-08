@@ -1,4 +1,4 @@
-package no.fintlabs.operator.pg.service;
+package no.fintlabs.service;
 
 import org.springframework.stereotype.Service;
 
