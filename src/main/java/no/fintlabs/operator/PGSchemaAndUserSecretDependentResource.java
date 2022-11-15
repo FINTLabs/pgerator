@@ -31,7 +31,7 @@ public class PGSchemaAndUserSecretDependentResource extends FlaisKubernetesDepen
 
         HashMap<String, String> labels = new HashMap<>(primary.getMetadata().getLabels());
 
-        labels.put("app.kubernetes.io/managed-by", "flaiserator");
+        labels.put("app.kubernetes.io/managed-by", "pgerator");
         return new SecretBuilder()
                 .withNewMetadata()
                     .withName(primary.getMetadata().getName()).withNamespace(primary.getMetadata().getNamespace())
