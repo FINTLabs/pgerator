@@ -38,9 +38,9 @@ public class PGSchemaAndUserSecretDependentResource extends FlaisKubernetesDepen
                     .withLabels(labels)
                     .endMetadata()
                 .withStringData(new HashMap<>() {{
-                    put(primary.getMetadata().getName() + ".pg.schema", pgSchemaAndUser.getSchemaName());
-                    put(primary.getMetadata().getName() + ".pg.username", pgSchemaAndUser.getUsername());
-                    put(primary.getMetadata().getName() + ".pg.password", pgSchemaAndUser.getPassword());
+                    put("fint.database.schema", pgSchemaAndUser.getSchemaName());
+                    put("fint.database.username", pgSchemaAndUser.getUsername());
+                    put("fint.database.password", pgSchemaAndUser.getPassword());
         }}).build();
 
     }
