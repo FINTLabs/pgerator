@@ -24,42 +24,37 @@ public class PGSchemaAndUserDependentResource extends FlaisExternalDependentReso
     @Override
     protected PGSchemaAndUser desired(PGSchemaAndUserCRD primary, Context<PGSchemaAndUserCRD> context) {
         return PGSchemaAndUser.builder()
-                .schemaName(primary.getSpec().getSchemaName())
-                .username(primary.getMetadata().getName())
-                .password("")
+                .database(primary.getSpec().getDatabaseName())
+                .schemaName(SchemaNameFactory.schemaNameFromMetadata(primary.getMetadata()))
+                .username(SchemaNameFactory.schemaNameFromMetadata(primary.getMetadata()))
+                .password(RandomStringUtils.randomAlphanumeric(32))
                 .build();
     }
 
     @Override
     public void delete(PGSchemaAndUserCRD primary, Context<PGSchemaAndUserCRD> context) {
-        String dbName = primary.getSpec().getDatabaseName();
-        String schemaName = primary.getSpec().getSchemaName();
-        String username = primary.getMetadata().getName();
-        pgService.deleteSchema(dbName, schemaName);
-        pgService.deleteUser(dbName, username);
+        context.getSecondaryResource(PGSchemaAndUser.class)
+                .ifPresent(pgSchemaAndUser -> {
+                    pgService.deleteUser(pgSchemaAndUser);
+                    pgService.makeSchemaOrphan(pgSchemaAndUser);
+                });
     }
 
     @Override
     public PGSchemaAndUser create(PGSchemaAndUser desired, PGSchemaAndUserCRD primary, Context<PGSchemaAndUserCRD> context) {
-        String dbName = primary.getSpec().getDatabaseName();
-        String schemaName = primary.getSpec().getSchemaName();
-        String username = primary.getMetadata().getName();
-        String password = RandomStringUtils.randomAlphanumeric(16);
-        pgService.createSchema(dbName, schemaName);
-        pgService.createDbUser(dbName, username, password);
-        pgService.grantPrivilegeToUser(dbName, schemaName, username, "all");
-        return PGSchemaAndUser.builder()
-                .schemaName(schemaName)
-                .username(username)
-                .password(password)
-                .build();
+
+        pgService.ensureDatabase(desired.getDatabase());
+        pgService.ensureSchema(desired);
+        pgService.ensureUser(desired);
+        //pgService.grantPrivilegeToUser(dbName, schemaName, username, "all");
+        return desired;
     }
 
     @Override
     public Set<PGSchemaAndUser> fetchResources(PGSchemaAndUserCRD primaryResource) {
         String dbName = primaryResource.getSpec().getDatabaseName();
-        String schemaName = primaryResource.getSpec().getSchemaName();
-        String username = primaryResource.getMetadata().getName();
+        String schemaName = SchemaNameFactory.schemaNameFromMetadata(primaryResource.getMetadata());
+        String username = SchemaNameFactory.schemaNameFromMetadata(primaryResource.getMetadata());
 
         return pgService.getSchemaAndUser(dbName, schemaName, username);
     }

@@ -2,18 +2,17 @@ package no.fintlabs.service;
 
 import lombok.extern.slf4j.Slf4j;
 import no.fintlabs.model.PGSchemaAndUser;
-import org.springframework.beans.factory.annotation.Autowired;
+import no.fintlabs.operator.SchemaNameFactory;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.core.env.Environment;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
 import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Slf4j
 @Component
@@ -21,142 +20,183 @@ public class PostgreSqlDataAccessService {
 
     private String currentDatabase;
 
-    @Autowired
-    private Environment environment;
+    private final Environment environment;
     private final JdbcTemplate jdbcTemplate;
 
-    public enum Privilege {
-        SELECT,
-        INSERT,
-        UPDATE,
-        DELETE,
-        TRUNCATE,
-        REFERENCES,
-        TRIGGER,
-        CREATE,
-        CONNECT,
-        TEMPORARY,
-        EXECUTE,
-        USAGE,
-        ALL
-    }
+//    public enum Privilege {
+//        SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER, CREATE, CONNECT, TEMPORARY, EXECUTE, USAGE, ALL
+//    }
 
-    public PostgreSqlDataAccessService(JdbcTemplate jdbcTemplate) {
+    public PostgreSqlDataAccessService(JdbcTemplate jdbcTemplate, Environment environment) {
         this.jdbcTemplate = jdbcTemplate;
         try {
-            currentDatabase = jdbcTemplate.getDataSource().getConnection().getCatalog();
+            currentDatabase = Objects.requireNonNull(jdbcTemplate.getDataSource()).getConnection().getCatalog();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+        this.environment = environment;
     }
 
-    public boolean databaseExists(String dbName) throws DataAccessException {
+    private boolean databaseExists(String dbName) throws DataAccessException {
         List<String> results = jdbcTemplate.query(SqlQueryFactory.generateDatabaseExistsSql(dbName), (rs, rowNum) -> rs.getString("datname"));
         return results.size() > 0;
     }
 
-    public boolean schemaExists(String dbName, String schemaName) throws DataAccessException {
-        changeDatabase(dbName);
-        List<String> results = jdbcTemplate.query(SqlQueryFactory.generateSchemaExistsSql(schemaName), (rs, rowNum) -> rs.getString("schema_name"));
-        return results.size() > 0;
-    }
+//    public boolean schemaExists(String dbName, String schemaName) throws DataAccessException {
+//        useDatabase(dbName);
+//        List<String> results = jdbcTemplate.query(SqlQueryFactory.schemaExistsSql(schemaName), (rs, rowNum) -> rs.getString("schema_name"));
+//        return results.size() > 0;
+//    }
 
-    public boolean userExists(String dbName, String username) throws DataAccessException {
-        changeDatabase(dbName);
-        List<String> results = jdbcTemplate.query(SqlQueryFactory.generateUserExistsSql(username), (rs, rowNum) -> rs.getString("usename"));
+    private boolean userExists(PGSchemaAndUser desired/*String dbName, String username*/) throws DataAccessException {
+        useDatabase(desired.getDatabase());
+        List<String> results = jdbcTemplate.query(SqlQueryFactory.generateUserExistsSql(desired.getUsername()), (rs, rowNum) -> rs.getString("usename"));
         return results.size() > 0;
     }
 
     public Set<PGSchemaAndUser> getSchemaAndUser(String dbName, String schemaName, String username) {
-        changeDatabase(dbName);
+        useDatabase(dbName);
         List<String> userResults = jdbcTemplate.query(SqlQueryFactory.generateUserExistsSql(username), (rs, rowNum) -> rs.getString("usename"));
-        List<String> schemaResults = jdbcTemplate.query(SqlQueryFactory.generateSchemaExistsSql(schemaName), (rs, rowNum) -> rs.getString("schema_name"));
+        List<String> schemaResults = jdbcTemplate.query(SqlQueryFactory.schemaExistsSql(schemaName), (rs, rowNum) -> rs.getString("schema_name"));
         if (userResults.size() > 0 && schemaResults.size() > 0) {
-            return Set.of(PGSchemaAndUser.builder()
-                    .username(userResults.get(0))
-                    .schemaName(schemaResults.get(0))
-                    .build());
+            return Set.of(
+                    PGSchemaAndUser
+                            .builder()
+                            .database(dbName)
+                            .username(userResults.get(0))
+                            .schemaName(schemaResults.get(0))
+                            .build());
         }
-        return Set.of();
+        return Collections.emptySet();
     }
 
-    public void createDb(String dbName) throws DataAccessException {
+    private void createDb(String dbName) throws DataAccessException {
         jdbcTemplate.execute(SqlQueryFactory.generateCreateDatabaseSql(dbName));
         log.info("Database created: " + dbName);
     }
 
-    public void deleteSchema(String dbName, String schemaName) throws DataAccessException {
-        changeDatabase(dbName);
-        jdbcTemplate.execute(SqlQueryFactory.generateDeleteSchemaSql(schemaName));
-        log.info("Schema deleted: " + schemaName);
+    public void makeSchemaOrphan(PGSchemaAndUser pgSchemaAndUser) throws DataAccessException {
+        useDatabase(pgSchemaAndUser.getDatabase());
+
+        jdbcTemplate.execute(SqlQueryFactory.schemaRenameSql(pgSchemaAndUser.getSchemaName(), SchemaNameFactory.orphanSchemaNameFromName(pgSchemaAndUser.getSchemaName())));
+        log.info("Schema deleted: " + pgSchemaAndUser.getSchemaName());
     }
 
-    public void deleteUser(String dbName, String username) throws DataAccessException {
-        changeDatabase(dbName);
-        jdbcTemplate.execute(SqlQueryFactory.generateReassignOwnedFromUserToUserSql(username, "postgres"));
-        jdbcTemplate.execute(SqlQueryFactory.generateDropOwnedByUserSql(username));
-        jdbcTemplate.execute(SqlQueryFactory.generateDropUserSql(username));
-        log.info("User deleted:" + username);
+    public void deleteUser(PGSchemaAndUser pgSchemaAndUser) throws DataAccessException {
+        useDatabase(pgSchemaAndUser.getDatabase());
+        jdbcTemplate.execute(SqlQueryFactory.revokeDefaultPrivilegesSql(pgSchemaAndUser.getUsername(), pgSchemaAndUser.getSchemaName()));
+        jdbcTemplate.execute(SqlQueryFactory.revokeAllPriviligesSql(pgSchemaAndUser.getUsername(), pgSchemaAndUser.getSchemaName()));
+        jdbcTemplate.execute(SqlQueryFactory.generateDropUserSql(pgSchemaAndUser.getUsername()));
+        log.info("User deleted:" + pgSchemaAndUser.getUsername());
     }
 
-    private void changeDatabase(String databaseName) {
-        if (!databaseExists(databaseName)) {
-            createDb(databaseName);
-        }
-        if (!currentDatabase.equalsIgnoreCase(databaseName)) {
-            DataSource dataSource = DataSourceBuilder.create()
-                    .url(environment.getProperty("spring.datasource.base-url") + databaseName.toLowerCase())
-                    .username(environment.getProperty("spring.datasource.username"))
-                    .password(environment.getProperty("spring.datasource.password"))
-                    .build();
-            jdbcTemplate.setDataSource(dataSource);
-            currentDatabase = databaseName;
-            log.info("Database changed to: " + databaseName);
-        }
-    }
+    private void useDatabase(String database) {
+        ensureDatabase(database);
+        if (!currentDatabase.equalsIgnoreCase(database)) {
+            try {
+                DataSourceUtils.doCloseConnection(DataSourceUtils.getConnection(Objects.requireNonNull(jdbcTemplate.getDataSource())), jdbcTemplate.getDataSource());
+                DataSource dataSource = DataSourceBuilder.create()
+                        .url(environment.getProperty("spring.datasource.base-url")
+                                + database.toLowerCase()
+                                + "?sslmode=require")
+                        .username(environment.getProperty("spring.datasource.username"))
+                        .password(environment.getProperty("spring.datasource.password"))
+                        .build();
 
-    public void createSchema(String databaseName, String schemaName) throws DataAccessException {
-        changeDatabase(databaseName);
-        jdbcTemplate.execute(SqlQueryFactory.generateCreateSchemaSql(schemaName));
-        log.info("Schema created: " + schemaName);
-    }
+                jdbcTemplate.setDataSource(dataSource);
 
-    public void createDbUser(String databaseName, String username, String password) throws DataAccessException {
-        changeDatabase(databaseName);
-        jdbcTemplate.execute(SqlQueryFactory.generateCreateDatabaseUserSql(username, password));
-        log.info("User " + username + " created");
-    }
+                currentDatabase = database;
+                log.info("Database changed to: " + database);
 
-
-    public void grantPrivilegeToUser(String databaseName, String schemaName, String username, String privilege) throws DataAccessException {
-        changeDatabase(databaseName);
-        jdbcTemplate.execute(SqlQueryFactory.generateGrantPrivilegeSql(schemaName, privilege, username));
-        jdbcTemplate.execute(SqlQueryFactory.generateGrantDefaultPrivilegesSql(schemaName, privilege, username));
-        log.info("Privilege " + privilege + " granted to " + username + " on schema " + schemaName);
-    }
-
-    public String getUserPrivilegesOnSchema(String databaseName, String schemaName, String username) throws DataAccessException {
-        changeDatabase(databaseName);
-
-        log.info("Creating test table");
-        jdbcTemplate.execute(SqlQueryFactory.generateCreateTestTable(schemaName));
-
-        List<String> privileges = jdbcTemplate.query(SqlQueryFactory.generateGetPrivileges(schemaName, username), (rs, rowNum) -> rs.getString("privilege_type"));
-        log.info("Privileges for \"" + username + "\" on schema " + schemaName + ": " + privileges);
-
-        log.info("Dropping test table");
-        jdbcTemplate.execute(SqlQueryFactory.generateDropTestTableSql(schemaName));
-
-        return String.join(",", privileges);
-    }
-
-    public void createSchemaUserAndSetPrivileges(String databaseName, String schemaName, String username, String password, List<String> privileges) throws DataAccessException {
-        createSchema(databaseName, schemaName);
-        createDbUser(databaseName, username, password);
-        for (String privilege : privileges) {
-            if (Arrays.stream(Privilege.class.getEnumConstants()).anyMatch(e -> e.name().equals(privilege.toUpperCase().trim()))) {
-                grantPrivilegeToUser(databaseName, schemaName, username, privilege);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
             }
         }
     }
+
+    public void ensureDatabase(String database) {
+        if (!databaseExists(database)) {
+            createDb(database);
+        }
+    }
+
+    public void ensureSchema(PGSchemaAndUser desired) throws DataAccessException {
+        useDatabase(desired.getDatabase());
+
+        hasOrphanSchema(desired)
+                .ifPresentOrElse(
+                        oldSchemaName -> renameSchema(desired, oldSchemaName),
+                        () -> createSchemaIfNotExits(desired)
+                );
+
+
+        log.info("Schema ensured: " + desired.getSchemaName());
+    }
+
+    private void createSchemaIfNotExits(PGSchemaAndUser pgSchemaAndUser) {
+        useDatabase(pgSchemaAndUser.getDatabase());
+        jdbcTemplate.execute(SqlQueryFactory.schemaCreateIfNotExistSql(pgSchemaAndUser.getSchemaName()));
+        log.debug("Created schema with name {} ", pgSchemaAndUser.getSchemaName());
+    }
+
+    private void renameSchema(PGSchemaAndUser pgSchemaAndUser, String oldName) {
+        useDatabase(pgSchemaAndUser.getDatabase());
+        jdbcTemplate.execute(SqlQueryFactory.schemaRenameSql(oldName, pgSchemaAndUser.getSchemaName()));
+    }
+
+    private Optional<String> hasOrphanSchema(PGSchemaAndUser pgSchemaAndUser) {
+        useDatabase(pgSchemaAndUser.getDatabase());
+        List<String> results = jdbcTemplate.query(SqlQueryFactory.schemaExistsSql(pgSchemaAndUser.getSchemaName() + "_orphan_%"), (rs, rowNum) -> rs.getString("schema_name"));
+
+        if (results.size() == 1) {
+            return Optional.of(results.get(0));
+        }
+
+        return Optional.empty();
+
+    }
+
+    public void ensureUser(PGSchemaAndUser desired) throws DataAccessException {
+        useDatabase(desired.getDatabase());
+        if (!userExists(desired)) {
+            jdbcTemplate.execute(SqlQueryFactory.databaseUserCreateSql(desired.getUsername(), desired.getPassword()));
+            log.debug("User " + desired.getUsername() + " created");
+        } else {
+            log.debug("User {} already exists", desired.getUsername());
+        }
+        grantPrivilegeToUser(desired);
+    }
+
+
+    private void grantPrivilegeToUser(PGSchemaAndUser pgSchemaAndUser) throws DataAccessException {
+        useDatabase(pgSchemaAndUser.getDatabase());
+        jdbcTemplate.execute(SqlQueryFactory.generateGrantPrivilegeSql(pgSchemaAndUser.getSchemaName(), "all", pgSchemaAndUser.getUsername()));
+        jdbcTemplate.execute(SqlQueryFactory.generateGrantDefaultPrivilegesSql(pgSchemaAndUser.getSchemaName(), "all", pgSchemaAndUser.getUsername()));
+        log.info("Privilege " + "all" + " granted to " + pgSchemaAndUser.getUsername() + " on schema " + pgSchemaAndUser.getSchemaName());
+    }
+
+//    public String getUserPrivilegesOnSchema(String databaseName, String schemaName, String username) throws DataAccessException {
+//        useDatabase(databaseName);
+//
+//        log.info("Creating test table");
+//        jdbcTemplate.execute(SqlQueryFactory.generateCreateTestTable(schemaName));
+//
+//        List<String> privileges = jdbcTemplate.query(SqlQueryFactory.generateGetPrivileges(schemaName, username), (rs, rowNum) -> rs.getString("privilege_type"));
+//        log.info("Privileges for \"" + username + "\" on schema " + schemaName + ": " + privileges);
+//
+//        log.info("Dropping test table");
+//        jdbcTemplate.execute(SqlQueryFactory.generateDropTestTableSql(schemaName));
+//
+//        return String.join(",", privileges);
+//    }
+
+//    public void createSchemaUserAndSetPrivileges(String databaseName, String schemaName, String username, String password, List<String> privileges) throws DataAccessException {
+//        ensureSchema(databaseName, schemaName);
+//        ensureDatabaseUser(databaseName, username, password);
+//        for (String privilege : privileges) {
+//            if (Arrays.stream(Privilege.class.getEnumConstants()).anyMatch(e -> e.name().equals(privilege.toUpperCase().trim()))) {
+//                grantPrivilegeToUser(databaseName, schemaName, username, privilege);
+//            }
+//        }
+//    }
 }

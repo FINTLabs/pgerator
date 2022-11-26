@@ -22,13 +22,12 @@ repositories {
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jdbc'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
-    implementation 'org.springframework.boot:spring-boot-starter-web'
 
     compileOnly 'org.projectlombok:lombok'
 
     annotationProcessor 'org.projectlombok:lombok'
 
-    implementation 'no.fintlabs:flais-operator-starter:1.0.0-rc-3'
+    implementation 'no.fintlabs:flais-operator-starter:1.0.0-rc-9'
 
     runtimeOnly 'org.postgresql:postgresql'
 
