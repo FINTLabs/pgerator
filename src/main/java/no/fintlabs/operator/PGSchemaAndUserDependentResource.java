@@ -3,7 +3,7 @@ package no.fintlabs.operator;
 
 import io.javaoperatorsdk.operator.api.reconciler.Context;
 import no.fintlabs.FlaisExternalDependentResource;
-import no.fintlabs.postgresql.PostgreSqlDataAccessService;
+import no.fintlabs.postgresql.PgService;
 import no.fintlabs.postgresql.SchemaNameFactory;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.stereotype.Component;
@@ -13,9 +13,9 @@ import java.util.Set;
 
 @Component
 public class PGSchemaAndUserDependentResource extends FlaisExternalDependentResource<PGSchemaAndUser, PGSchemaAndUserCRD, PGSchemaAndUserSpec> {
-    private final PostgreSqlDataAccessService pgService;
+    private final PgService pgService;
 
-    public PGSchemaAndUserDependentResource(PGSchemaAndUserWorkflow workflow, PostgreSqlDataAccessService pgService) {
+    public PGSchemaAndUserDependentResource(PGSchemaAndUserWorkflow workflow, PgService pgService) {
         super(PGSchemaAndUser.class, workflow);
         this.pgService = pgService;
         setPollingPeriod(Duration.ofMinutes(10).toMillis());

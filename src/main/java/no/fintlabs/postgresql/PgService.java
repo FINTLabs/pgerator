@@ -16,7 +16,7 @@ import java.util.*;
 
 @Slf4j
 @Component
-public class PostgreSqlDataAccessService {
+public class PgService {
 
     private String currentDatabase;
 
@@ -25,7 +25,7 @@ public class PostgreSqlDataAccessService {
     private final OperatorProperties operatorProperties;
     private final JdbcTemplate jdbcTemplate;
 
-    public PostgreSqlDataAccessService(JdbcTemplate jdbcTemplate, PgProperties pgProperties, OperatorProperties operatorProperties) {
+    public PgService(JdbcTemplate jdbcTemplate, PgProperties pgProperties, OperatorProperties operatorProperties) {
         this.jdbcTemplate = jdbcTemplate;
         this.pgProperties = pgProperties;
         this.operatorProperties = operatorProperties;
@@ -37,20 +37,20 @@ public class PostgreSqlDataAccessService {
     }
 
     private boolean databaseExists(String dbName) throws DataAccessException {
-        List<String> results = jdbcTemplate.query(SqlQueryFactory.generateDatabaseExistsSql(dbName), (rs, rowNum) -> rs.getString("datname"));
+        List<String> results = jdbcTemplate.query(SqlFactory.generateDatabaseExistsSql(dbName), (rs, rowNum) -> rs.getString("datname"));
         return results.size() > 0;
     }
 
     private boolean userExists(PGSchemaAndUser desired) throws DataAccessException {
         useDatabase(desired.getDatabase());
-        List<String> results = jdbcTemplate.query(SqlQueryFactory.generateUserExistsSql(desired.getUsername()), (rs, rowNum) -> rs.getString("usename"));
+        List<String> results = jdbcTemplate.query(SqlFactory.generateUserExistsSql(desired.getUsername()), (rs, rowNum) -> rs.getString("usename"));
         return results.size() > 0;
     }
 
     public Set<PGSchemaAndUser> getSchemaAndUser(String dbName, String schemaName, String username) {
         useDatabase(dbName);
-        List<String> userResults = jdbcTemplate.query(SqlQueryFactory.generateUserExistsSql(username), (rs, rowNum) -> rs.getString("usename"));
-        List<String> schemaResults = jdbcTemplate.query(SqlQueryFactory.schemaExistsSql(schemaName), (rs, rowNum) -> rs.getString("schema_name"));
+        List<String> userResults = jdbcTemplate.query(SqlFactory.generateUserExistsSql(username), (rs, rowNum) -> rs.getString("usename"));
+        List<String> schemaResults = jdbcTemplate.query(SqlFactory.schemaExistsSql(schemaName), (rs, rowNum) -> rs.getString("schema_name"));
         if (userResults.size() > 0 && schemaResults.size() > 0) {
             return Set.of(
                     PGSchemaAndUser
@@ -64,22 +64,22 @@ public class PostgreSqlDataAccessService {
     }
 
     private void createDb(String dbName) throws DataAccessException {
-        jdbcTemplate.execute(SqlQueryFactory.generateCreateDatabaseSql(dbName));
+        jdbcTemplate.execute(SqlFactory.generateCreateDatabaseSql(dbName));
         log.info("Database created: " + dbName);
     }
 
     public void makeSchemaOrphan(PGSchemaAndUser pgSchemaAndUser) throws DataAccessException {
         useDatabase(pgSchemaAndUser.getDatabase());
 
-        jdbcTemplate.execute(SqlQueryFactory.schemaRenameSql(pgSchemaAndUser.getSchemaName(), SchemaNameFactory.orphanSchemaNameFromName(pgSchemaAndUser.getSchemaName())));
+        jdbcTemplate.execute(SqlFactory.schemaRenameSql(pgSchemaAndUser.getSchemaName(), SchemaNameFactory.orphanSchemaNameFromName(pgSchemaAndUser.getSchemaName())));
         log.info("Schema deleted: " + pgSchemaAndUser.getSchemaName());
     }
 
     public void deleteUser(PGSchemaAndUser pgSchemaAndUser) throws DataAccessException {
         useDatabase(pgSchemaAndUser.getDatabase());
-        jdbcTemplate.execute(SqlQueryFactory.revokeDefaultPrivilegesSql(pgSchemaAndUser.getUsername(), pgSchemaAndUser.getSchemaName()));
-        jdbcTemplate.execute(SqlQueryFactory.revokeAllPriviligesSql(pgSchemaAndUser.getUsername(), pgSchemaAndUser.getSchemaName()));
-        jdbcTemplate.execute(SqlQueryFactory.generateDropUserSql(pgSchemaAndUser.getUsername()));
+        jdbcTemplate.execute(SqlFactory.revokeDefaultPrivilegesSql(pgSchemaAndUser.getUsername(), pgSchemaAndUser.getSchemaName()));
+        jdbcTemplate.execute(SqlFactory.revokeAllPriviligesSql(pgSchemaAndUser.getUsername(), pgSchemaAndUser.getSchemaName()));
+        jdbcTemplate.execute(SqlFactory.generateDropUserSql(pgSchemaAndUser.getUsername()));
         log.info("User deleted:" + pgSchemaAndUser.getUsername());
     }
 
@@ -128,18 +128,18 @@ public class PostgreSqlDataAccessService {
 
     private void createSchemaIfNotExits(PGSchemaAndUser pgSchemaAndUser) {
         useDatabase(pgSchemaAndUser.getDatabase());
-        jdbcTemplate.execute(SqlQueryFactory.schemaCreateIfNotExistSql(pgSchemaAndUser.getSchemaName()));
+        jdbcTemplate.execute(SqlFactory.schemaCreateIfNotExistSql(pgSchemaAndUser.getSchemaName()));
         log.debug("Created schema with name {} ", pgSchemaAndUser.getSchemaName());
     }
 
     private void renameSchema(PGSchemaAndUser pgSchemaAndUser, String oldName) {
         useDatabase(pgSchemaAndUser.getDatabase());
-        jdbcTemplate.execute(SqlQueryFactory.schemaRenameSql(oldName, pgSchemaAndUser.getSchemaName()));
+        jdbcTemplate.execute(SqlFactory.schemaRenameSql(oldName, pgSchemaAndUser.getSchemaName()));
     }
 
     private Optional<String> hasOrphanSchema(PGSchemaAndUser pgSchemaAndUser) {
         useDatabase(pgSchemaAndUser.getDatabase());
-        List<String> results = jdbcTemplate.query(SqlQueryFactory.schemaExistsSql(pgSchemaAndUser.getSchemaName() + "_orphan_%"), (rs, rowNum) -> rs.getString("schema_name"));
+        List<String> results = jdbcTemplate.query(SqlFactory.schemaExistsSql(pgSchemaAndUser.getSchemaName() + "_orphan_%"), (rs, rowNum) -> rs.getString("schema_name"));
 
         if (results.size() == 1) {
             return Optional.of(results.get(0));
@@ -152,7 +152,7 @@ public class PostgreSqlDataAccessService {
     public void ensureUser(PGSchemaAndUser desired) throws DataAccessException {
         useDatabase(desired.getDatabase());
         if (!userExists(desired)) {
-            jdbcTemplate.execute(SqlQueryFactory.userCreateSql(desired.getUsername(), desired.getPassword()));
+            jdbcTemplate.execute(SqlFactory.userCreateSql(desired.getUsername(), desired.getPassword()));
             log.debug("User " + desired.getUsername() + " created");
         } else {
             log.debug("User {} already exists", desired.getUsername());
@@ -162,7 +162,7 @@ public class PostgreSqlDataAccessService {
 
     public String resetUserPassword(String username) {
         String password = RandomStringUtils.randomAlphanumeric(32);
-        jdbcTemplate.execute(SqlQueryFactory.resetUserPasswordSql(username, password));
+        jdbcTemplate.execute(SqlFactory.resetUserPasswordSql(username, password));
         log.debug("Reset password for user {}", username);
 
         return password;
@@ -171,8 +171,8 @@ public class PostgreSqlDataAccessService {
 
     private void grantPrivilegeToUser(PGSchemaAndUser pgSchemaAndUser) throws DataAccessException {
         useDatabase(pgSchemaAndUser.getDatabase());
-        jdbcTemplate.execute(SqlQueryFactory.generateGrantPrivilegeSql(pgSchemaAndUser.getSchemaName(), "all", pgSchemaAndUser.getUsername()));
-        jdbcTemplate.execute(SqlQueryFactory.generateGrantDefaultPrivilegesSql(pgSchemaAndUser.getSchemaName(), "all", pgSchemaAndUser.getUsername()));
+        jdbcTemplate.execute(SqlFactory.generateGrantPrivilegeSql(pgSchemaAndUser.getSchemaName(), "all", pgSchemaAndUser.getUsername()));
+        jdbcTemplate.execute(SqlFactory.generateGrantDefaultPrivilegesSql(pgSchemaAndUser.getSchemaName(), "all", pgSchemaAndUser.getUsername()));
         log.info("Privilege " + "all" + " granted to " + pgSchemaAndUser.getUsername() + " on schema " + pgSchemaAndUser.getSchemaName());
     }
 }

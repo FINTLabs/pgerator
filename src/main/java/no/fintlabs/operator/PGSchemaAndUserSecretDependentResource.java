@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import no.fintlabs.FlaisKubernetesDependentResource;
 import no.fintlabs.FlaisWorkflow;
 import no.fintlabs.OperatorProperties;
-import no.fintlabs.postgresql.PostgreSqlDataAccessService;
+import no.fintlabs.postgresql.PgService;
 import org.springframework.stereotype.Component;
 
 import java.util.Base64;
@@ -20,12 +20,12 @@ import java.util.Objects;
 public class PGSchemaAndUserSecretDependentResource extends FlaisKubernetesDependentResource<Secret, PGSchemaAndUserCRD, PGSchemaAndUserSpec> {
 
     private final OperatorProperties properties;
-    private final PostgreSqlDataAccessService postgreSqlDataAccessService;
+    private final PgService pgService;
 
-    public PGSchemaAndUserSecretDependentResource(FlaisWorkflow<PGSchemaAndUserCRD, PGSchemaAndUserSpec> workflow, KubernetesClient kubernetesClient, PGSchemaAndUserDependentResource dependentResource, OperatorProperties properties, PostgreSqlDataAccessService postgreSqlDataAccessService) {
+    public PGSchemaAndUserSecretDependentResource(FlaisWorkflow<PGSchemaAndUserCRD, PGSchemaAndUserSpec> workflow, KubernetesClient kubernetesClient, PGSchemaAndUserDependentResource dependentResource, OperatorProperties properties, PgService pgService) {
         super(Secret.class, workflow, kubernetesClient);
         this.properties = properties;
-        this.postgreSqlDataAccessService = postgreSqlDataAccessService;
+        this.pgService = pgService;
         dependsOn(dependentResource);
     }
 
@@ -40,7 +40,7 @@ public class PGSchemaAndUserSecretDependentResource extends FlaisKubernetesDepen
     private Secret generateSecret(PGSchemaAndUserCRD primary, Context<PGSchemaAndUserCRD> context) {
         PGSchemaAndUser pgSchemaAndUser = context.getSecondaryResource(PGSchemaAndUser.class).orElseThrow();
         if (Objects.isNull(pgSchemaAndUser.getPassword())) {
-            pgSchemaAndUser.setPassword(postgreSqlDataAccessService.resetUserPassword(pgSchemaAndUser.getUsername()));
+            pgSchemaAndUser.setPassword(pgService.resetUserPassword(pgSchemaAndUser.getUsername()));
         }
         HashMap<String, String> labels = new HashMap<>(primary.getMetadata().getLabels());
         labels.put("app.kubernetes.io/managed-by", "pgerator");

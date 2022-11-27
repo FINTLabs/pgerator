@@ -3,7 +3,7 @@ package no.fintlabs.postgresql;
 import org.springframework.stereotype.Service;
 
 @Service
-public class SqlQueryFactory {
+public class SqlFactory {
 
     public static String generateDatabaseExistsSql(String databaseName) {
         return "SELECT datname FROM pg_catalog.pg_database WHERE lower(datname) = '" + databaseName.toLowerCase() + "'";
@@ -20,10 +20,6 @@ public class SqlQueryFactory {
     public static String generateCreateDatabaseSql(String dbName) {
             return "CREATE DATABASE " + dbName;
     }
-
-//    public static String makeSchemaOrphantSql(String schemaName) {
-//        return "DROP SCHEMA IF EXISTS \"" + schemaName + "\" CASCADE";
-//    }
 
     public static String revokeDefaultPrivilegesSql(String username, String schema) {
         return "ALTER DEFAULT PRIVILEGES IN SCHEMA \"" + schema + "\" REVOKE ALL ON TABLES FROM \"" + username +  "\";";
@@ -60,16 +56,4 @@ public class SqlQueryFactory {
     public static String generateGrantDefaultPrivilegesSql(String schemaName, String privilege, String username) {
         return "ALTER DEFAULT PRIVILEGES IN SCHEMA \"" + schemaName + "\" GRANT " + privilege + " ON TABLES TO \"" + username + "\"";
     }
-
-//    public static String generateCreateTestTable(String schemaName) {
-//        return "CREATE TABLE " + schemaName + ".testtable (id SERIAL PRIMARY KEY, name VARCHAR(255) NOT NULL)";
-//    }
-
-//    public static String generateGetPrivileges(String schemaName, String username) {
-//        return "SELECT grantee, table_schema, privilege_type FROM information_schema.role_table_grants WHERE grantee = '" + username + "' AND table_schema = '" + schemaName + "'";
-//    }
-
-//    public static String generateDropTestTableSql(String schemaName) {
-//        return "DROP TABLE " + schemaName + ".testtable";
-//    }
 }
