@@ -68,11 +68,20 @@ public class PgService {
         log.info("Database created: " + dbName);
     }
 
-    public void makeSchemaOrphan(PGSchemaAndUser pgSchemaAndUser) throws DataAccessException {
+    public void makeSchemaOrphanOrDelete(PGSchemaAndUser pgSchemaAndUser) throws DataAccessException {
         useDatabase(pgSchemaAndUser.getDatabase());
 
-        jdbcTemplate.execute(SqlFactory.schemaRenameSql(pgSchemaAndUser.getSchemaName(), SchemaNameFactory.orphanSchemaNameFromName(pgSchemaAndUser.getSchemaName())));
-        log.info("Schema deleted: " + pgSchemaAndUser.getSchemaName());
+        if (schemaHasTables(pgSchemaAndUser)) {
+            log.debug("Schema {} has tables. Make it orphan", pgSchemaAndUser.getSchemaName());
+            jdbcTemplate.execute(SqlFactory.schemaRenameSql(pgSchemaAndUser.getSchemaName(), SchemaNameFactory.orphanSchemaNameFromName(pgSchemaAndUser.getSchemaName())));
+        } else {
+            log.debug("Schema {} does not have tables. Removing it.", pgSchemaAndUser.getSchemaName());
+            jdbcTemplate.execute(SqlFactory.deleteSchemaSql(pgSchemaAndUser.getSchemaName()));
+        }
+    }
+
+    private boolean schemaHasTables(PGSchemaAndUser pgSchemaAndUser) {
+        return jdbcTemplate.query(SqlFactory.schemaHasTablesSql(pgSchemaAndUser.getSchemaName()), (rs, rowNum) -> rs.getBoolean("exists")).get(0);
     }
 
     public void deleteUser(PGSchemaAndUser pgSchemaAndUser) throws DataAccessException {

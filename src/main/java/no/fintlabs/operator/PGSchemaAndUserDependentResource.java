@@ -35,7 +35,7 @@ public class PGSchemaAndUserDependentResource extends FlaisExternalDependentReso
         context.getSecondaryResource(PGSchemaAndUser.class)
                 .ifPresent(pgSchemaAndUser -> {
                     pgService.deleteUser(pgSchemaAndUser);
-                    pgService.makeSchemaOrphan(pgSchemaAndUser);
+                    pgService.makeSchemaOrphanOrDelete(pgSchemaAndUser);
                 });
     }
 

@@ -13,16 +13,26 @@ public class SqlFactory {
         return "SELECT schema_name FROM information_schema.schemata WHERE lower(schema_name) like '" + schemaName.toLowerCase() + "'";
     }
 
+    public static String schemaHasTablesSql(String schema) {
+        return String.format("SELECT EXISTS (" +
+                        "    SELECT FROM" +
+                        "        pg_tables" +
+                        "    WHERE" +
+                        "        schemaname = '%s'" +
+                        "    );",
+                schema);
+    }
+
     public static String generateUserExistsSql(String username) {
         return "SELECT usename FROM pg_catalog.pg_user WHERE lower(usename) = '" + username.toLowerCase() + "'";
     }
 
     public static String generateCreateDatabaseSql(String dbName) {
-            return "CREATE DATABASE " + dbName;
+        return "CREATE DATABASE " + dbName;
     }
 
     public static String revokeDefaultPrivilegesSql(String username, String schema) {
-        return "ALTER DEFAULT PRIVILEGES IN SCHEMA \"" + schema + "\" REVOKE ALL ON TABLES FROM \"" + username +  "\";";
+        return "ALTER DEFAULT PRIVILEGES IN SCHEMA \"" + schema + "\" REVOKE ALL ON TABLES FROM \"" + username + "\";";
     }
 
     public static String revokeAllPriviligesSql(String username, String schema) {
@@ -46,7 +56,7 @@ public class SqlFactory {
     }
 
     public static String resetUserPasswordSql(String username, String password) {
-        return "ALTER USER \"" + username + "\" WITH PASSWORD '" + password +  "';";
+        return "ALTER USER \"" + username + "\" WITH PASSWORD '" + password + "';";
     }
 
     public static String generateGrantPrivilegeSql(String schemaName, String privilege, String username) {
@@ -55,5 +65,9 @@ public class SqlFactory {
 
     public static String generateGrantDefaultPrivilegesSql(String schemaName, String privilege, String username) {
         return "ALTER DEFAULT PRIVILEGES IN SCHEMA \"" + schemaName + "\" GRANT " + privilege + " ON TABLES TO \"" + username + "\"";
+    }
+
+    public static String deleteSchemaSql(String schemaName) {
+        return String.format("DROP SCHEMA \"%s\"", schemaName);
     }
 }
