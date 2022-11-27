@@ -1,4 +1,4 @@
-package no.fintlabs.model;
+package no.fintlabs.operator;
 
 import lombok.*;
 
@@ -8,6 +8,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PGSchemaAndUser {
+    private String database;
     private String schemaName;
     private String username;
     private String password;

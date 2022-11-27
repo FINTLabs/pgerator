@@ -19,13 +19,13 @@ spec:
             properties:
               databaseName:
                 type: string
-              schemaName:
-                type: string
-              deleteOnCleanup:
-                type: boolean
             type: object
           status:
             properties:
+              dependentResourceStatus:
+                items:
+                  type: string
+                type: array
               errorMessage:
                 type: string
               observedGeneration:

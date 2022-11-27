@@ -2,7 +2,7 @@ package no.fintlabs.operator;
 
 import io.javaoperatorsdk.operator.api.reconciler.ControllerConfiguration;
 import io.javaoperatorsdk.operator.api.reconciler.dependent.Deleter;
-import io.javaoperatorsdk.operator.api.reconciler.dependent.EventSourceProvider;
+import io.javaoperatorsdk.operator.api.reconciler.dependent.DependentResource;
 import lombok.extern.slf4j.Slf4j;
 import no.fintlabs.FlaisReconiler;
 import no.fintlabs.FlaisWorkflow;
@@ -14,7 +14,11 @@ import java.util.List;
 @Component
 @ControllerConfiguration
 public class PGSchemaAndUserReconciler extends FlaisReconiler<PGSchemaAndUserCRD, PGSchemaAndUserSpec> {
-    public PGSchemaAndUserReconciler(FlaisWorkflow<PGSchemaAndUserCRD, PGSchemaAndUserSpec> workflow, List<? extends EventSourceProvider<PGSchemaAndUserCRD>> eventSourceProviders, List<? extends Deleter<PGSchemaAndUserCRD>> deleters) {
+    public PGSchemaAndUserReconciler(
+            FlaisWorkflow<PGSchemaAndUserCRD, PGSchemaAndUserSpec> workflow,
+            List<? extends DependentResource<?, PGSchemaAndUserCRD>> eventSourceProviders,
+            List<? extends Deleter<PGSchemaAndUserCRD>> deleters) {
+
         super(workflow, eventSourceProviders, deleters);
     }
 }
