@@ -2,6 +2,8 @@ package no.fintlabs.postgresql;
 
 import lombok.extern.slf4j.Slf4j;
 import no.fintlabs.OperatorProperties;
+import no.fintlabs.aiven.AivenServiceUser;
+import no.fintlabs.aiven.AivenService;
 import no.fintlabs.operator.PGSchemaAndUser;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.boot.jdbc.DataSourceBuilder;
@@ -25,10 +27,13 @@ public class PgService {
     private final OperatorProperties operatorProperties;
     private final JdbcTemplate jdbcTemplate;
 
-    public PgService(JdbcTemplate jdbcTemplate, PgProperties pgProperties, OperatorProperties operatorProperties) {
+    private final AivenService aivenService;
+
+    public PgService(JdbcTemplate jdbcTemplate, PgProperties pgProperties, OperatorProperties operatorProperties, AivenService aivenService) {
         this.jdbcTemplate = jdbcTemplate;
         this.pgProperties = pgProperties;
         this.operatorProperties = operatorProperties;
+        this.aivenService = aivenService;
         try {
             currentDatabase = Objects.requireNonNull(jdbcTemplate.getDataSource()).getConnection().getCatalog();
         } catch (SQLException e) {
@@ -49,14 +54,16 @@ public class PgService {
 
     public Set<PGSchemaAndUser> getSchemaAndUser(String dbName, String schemaName, String username) {
         useDatabase(dbName);
-        List<String> userResults = jdbcTemplate.query(SqlFactory.generateUserExistsSql(username), (rs, rowNum) -> rs.getString("usename"));
+        //List<String> userResults = jdbcTemplate.query(SqlFactory.generateUserExistsSql(username), (rs, rowNum) -> rs.getString("usename"));
+        Optional<AivenServiceUser> serviceUser = aivenService.getServiceUser(username);
         List<String> schemaResults = jdbcTemplate.query(SqlFactory.schemaExistsSql(schemaName), (rs, rowNum) -> rs.getString("schema_name"));
-        if (userResults.size() > 0 && schemaResults.size() > 0) {
+        if (serviceUser.isPresent() && schemaResults.size() > 0) {
             return Set.of(
                     PGSchemaAndUser
                             .builder()
                             .database(dbName)
-                            .username(userResults.get(0))
+                            .username(serviceUser.get().getAivenPGServiceUser().getUsername())
+                            .password(serviceUser.get().getAivenPGServiceUser().getPassword())
                             .schemaName(schemaResults.get(0))
                             .build());
         }
@@ -88,7 +95,8 @@ public class PgService {
         useDatabase(pgSchemaAndUser.getDatabase());
         jdbcTemplate.execute(SqlFactory.revokeDefaultPrivilegesSql(pgSchemaAndUser.getUsername(), pgSchemaAndUser.getSchemaName()));
         jdbcTemplate.execute(SqlFactory.revokeAllPriviligesSql(pgSchemaAndUser.getUsername(), pgSchemaAndUser.getSchemaName()));
-        jdbcTemplate.execute(SqlFactory.generateDropUserSql(pgSchemaAndUser.getUsername()));
+        //jdbcTemplate.execute(SqlFactory.generateDropUserSql(pgSchemaAndUser.getUsername()));
+        aivenService.deleteUserForService(pgSchemaAndUser.getUsername());
         log.info("User deleted:" + pgSchemaAndUser.getUsername());
     }
 
@@ -160,12 +168,13 @@ public class PgService {
 
     public void ensureUser(PGSchemaAndUser desired) throws DataAccessException {
         useDatabase(desired.getDatabase());
-        if (!userExists(desired)) {
-            jdbcTemplate.execute(SqlFactory.userCreateSql(desired.getUsername(), desired.getPassword()));
-            log.debug("User " + desired.getUsername() + " created");
-        } else {
-            log.debug("User {} already exists", desired.getUsername());
-        }
+//        if (!userExists(desired)) {
+//            jdbcTemplate.execute(SqlFactory.userCreateSql(desired.getUsername(), desired.getPassword()));
+//            log.debug("User " + desired.getUsername() + " created");
+//        } else {
+//            log.debug("User {} already exists", desired.getUsername());
+//        }
+        aivenService.createUserForService(desired);
         grantPrivilegeToUser(desired);
     }
 
@@ -178,7 +187,7 @@ public class PgService {
     }
 
 
-    private void grantPrivilegeToUser(PGSchemaAndUser pgSchemaAndUser) throws DataAccessException {
+    public void grantPrivilegeToUser(PGSchemaAndUser pgSchemaAndUser) throws DataAccessException {
         useDatabase(pgSchemaAndUser.getDatabase());
         jdbcTemplate.execute(SqlFactory.generateGrantPrivilegeSql(pgSchemaAndUser.getSchemaName(), "all", pgSchemaAndUser.getUsername()));
         jdbcTemplate.execute(SqlFactory.generateGrantDefaultPrivilegesSql(pgSchemaAndUser.getSchemaName(), "all", pgSchemaAndUser.getUsername()));

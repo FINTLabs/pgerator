@@ -13,7 +13,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.Base64;
 import java.util.HashMap;
-import java.util.Objects;
 
 @Component
 @Slf4j
@@ -33,15 +32,17 @@ public class PGSchemaAndUserSecretDependentResource extends FlaisKubernetesDepen
     protected Secret desired(PGSchemaAndUserCRD primary, Context<PGSchemaAndUserCRD> context) {
         log.debug("Desired secret for {}", primary.getMetadata().getName());
 
-        return context.getSecondaryResource(Secret.class)
-                .orElse(generateSecret(primary, context));
+        //return context.getSecondaryResource(Secret.class)
+        //        .orElse(generateSecret(primary, context));
+
+        return generateSecret(primary, context);
     }
 
     private Secret generateSecret(PGSchemaAndUserCRD primary, Context<PGSchemaAndUserCRD> context) {
         PGSchemaAndUser pgSchemaAndUser = context.getSecondaryResource(PGSchemaAndUser.class).orElseThrow();
-        if (Objects.isNull(pgSchemaAndUser.getPassword())) {
-            pgSchemaAndUser.setPassword(pgService.resetUserPassword(pgSchemaAndUser.getUsername()));
-        }
+//        if (Objects.isNull(pgSchemaAndUser.getPassword())) {
+//            pgSchemaAndUser.setPassword(pgService.resetUserPassword(pgSchemaAndUser.getUsername()));
+//        }
         HashMap<String, String> labels = new HashMap<>(primary.getMetadata().getLabels());
         labels.put("app.kubernetes.io/managed-by", "pgerator");
 
@@ -55,7 +56,7 @@ public class PGSchemaAndUserSecretDependentResource extends FlaisKubernetesDepen
                 .addToData("fint.database.username", encode(pgSchemaAndUser.getUsername()))
                 .addToData("fint.database.password", encode(pgSchemaAndUser.getPassword()))
                 .addToData("fint.database.url", encode(properties.getBaseUrl()
-                        + pgSchemaAndUser.getDatabase().toLowerCase()
+                        + pgSchemaAndUser.getSchemaName().toLowerCase()
                         + "?sslmode=require"))
                 .build();
     }

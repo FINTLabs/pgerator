@@ -2,7 +2,9 @@ package no.fintlabs.operator;
 
 
 import io.javaoperatorsdk.operator.api.reconciler.Context;
+import lombok.extern.slf4j.Slf4j;
 import no.fintlabs.FlaisExternalDependentResource;
+import no.fintlabs.aiven.AivenService;
 import no.fintlabs.postgresql.PgService;
 import no.fintlabs.postgresql.SchemaNameFactory;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -11,18 +13,23 @@ import org.springframework.stereotype.Component;
 import java.time.Duration;
 import java.util.Set;
 
+@Slf4j
 @Component
 public class PGSchemaAndUserDependentResource extends FlaisExternalDependentResource<PGSchemaAndUser, PGSchemaAndUserCRD, PGSchemaAndUserSpec> {
     private final PgService pgService;
+    private final AivenService aivenService;
 
-    public PGSchemaAndUserDependentResource(PGSchemaAndUserWorkflow workflow, PgService pgService) {
+    public PGSchemaAndUserDependentResource(PGSchemaAndUserWorkflow workflow, PgService pgService, AivenService aivenService) {
         super(PGSchemaAndUser.class, workflow);
         this.pgService = pgService;
+        this.aivenService = aivenService;
         setPollingPeriod(Duration.ofMinutes(10).toMillis());
     }
 
     @Override
     protected PGSchemaAndUser desired(PGSchemaAndUserCRD primary, Context<PGSchemaAndUserCRD> context) {
+        log.debug("Desired PGSchemaAndUser for {}", primary.getMetadata().getName());
+
         return PGSchemaAndUser.builder()
                 .database(primary.getSpec().getDatabaseName())
                 .schemaName(SchemaNameFactory.schemaNameFromMetadata(primary.getMetadata()))
@@ -34,6 +41,7 @@ public class PGSchemaAndUserDependentResource extends FlaisExternalDependentReso
     public void delete(PGSchemaAndUserCRD primary, Context<PGSchemaAndUserCRD> context) {
         context.getSecondaryResource(PGSchemaAndUser.class)
                 .ifPresent(pgSchemaAndUser -> {
+                    aivenService.deleteConnectionPool(pgSchemaAndUser);
                     pgService.deleteUser(pgSchemaAndUser);
                     pgService.makeSchemaOrphanOrDelete(pgSchemaAndUser);
                 });
@@ -47,6 +55,8 @@ public class PGSchemaAndUserDependentResource extends FlaisExternalDependentReso
         pgService.ensureDatabase(desired.getDatabase());
         pgService.ensureSchema(desired);
         pgService.ensureUser(desired);
+        pgService.grantPrivilegeToUser(desired);
+        aivenService.createConnectionPool(desired);
 
         return desired;
     }
