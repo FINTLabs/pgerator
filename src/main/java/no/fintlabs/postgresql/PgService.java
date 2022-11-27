@@ -37,7 +37,7 @@ public class PgService {
     }
 
     private boolean databaseExists(String dbName) throws DataAccessException {
-        List<String> results = jdbcTemplate.query(SqlFactory.generateDatabaseExistsSql(dbName), (rs, rowNum) -> rs.getString("datname"));
+        List<String> results = jdbcTemplate.query(SqlFactory.databaseExistsSql(dbName), (rs, rowNum) -> rs.getString("datname"));
         return results.size() > 0;
     }
 

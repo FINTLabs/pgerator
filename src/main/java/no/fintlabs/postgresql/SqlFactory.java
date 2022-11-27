@@ -5,8 +5,11 @@ import org.springframework.stereotype.Service;
 @Service
 public class SqlFactory {
 
-    public static String generateDatabaseExistsSql(String databaseName) {
-        return "SELECT datname FROM pg_catalog.pg_database WHERE lower(datname) = '" + databaseName.toLowerCase() + "'";
+    public static String databaseExistsSql(String databaseName) {
+        return String.format(
+                "SELECT datname FROM pg_catalog.pg_database WHERE lower(datname) = '%s'",
+                databaseName.toLowerCase()
+        );
     }
 
     public static String schemaExistsSql(String schemaName) {

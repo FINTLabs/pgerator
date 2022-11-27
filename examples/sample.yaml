@@ -1,14 +1,14 @@
 apiVersion: "fintlabs.no/v1alpha1"
 kind: PGSchemaAndUser
 metadata:
-  name: sampleuser
+  name: fint-betaling-backend
   labels:
-    app.kubernetes.io/name: sample-user
-    app.kubernetes.io/instance: sample-test
+    app.kubernetes.io/name: fint-betaling-backend
+    app.kubernetes.io/instance: fint-betaling-backend_rogfk-no
     app.kubernetes.io/version: latest
-    app.kubernetes.io/component: sample
-    app.kubernetes.io/part-of: sample-test
-    fintlabs.no/team: sample-test
-    fintlabs.no/org-id: test.rogfk.no
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/part-of: fint-betaling
+    fintlabs.no/team: core
+    fintlabs.no/org-id: rogfk.no
 spec:
-  databaseName: sample_db
+  databaseName: fint_betaling
