@@ -1,10 +1,10 @@
-package no.fintlabs.service;
+package no.fintlabs.postgresql;
 
 import lombok.extern.slf4j.Slf4j;
-import no.fintlabs.model.PGSchemaAndUser;
-import no.fintlabs.operator.SchemaNameFactory;
+import no.fintlabs.OperatorProperties;
+import no.fintlabs.operator.PGSchemaAndUser;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.boot.jdbc.DataSourceBuilder;
-import org.springframework.core.env.Environment;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceUtils;
@@ -20,21 +20,20 @@ public class PostgreSqlDataAccessService {
 
     private String currentDatabase;
 
-    private final Environment environment;
+
+    private final PgProperties pgProperties;
+    private final OperatorProperties operatorProperties;
     private final JdbcTemplate jdbcTemplate;
 
-//    public enum Privilege {
-//        SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER, CREATE, CONNECT, TEMPORARY, EXECUTE, USAGE, ALL
-//    }
-
-    public PostgreSqlDataAccessService(JdbcTemplate jdbcTemplate, Environment environment) {
+    public PostgreSqlDataAccessService(JdbcTemplate jdbcTemplate, PgProperties pgProperties, OperatorProperties operatorProperties) {
         this.jdbcTemplate = jdbcTemplate;
+        this.pgProperties = pgProperties;
+        this.operatorProperties = operatorProperties;
         try {
             currentDatabase = Objects.requireNonNull(jdbcTemplate.getDataSource()).getConnection().getCatalog();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        this.environment = environment;
     }
 
     private boolean databaseExists(String dbName) throws DataAccessException {
@@ -42,13 +41,7 @@ public class PostgreSqlDataAccessService {
         return results.size() > 0;
     }
 
-//    public boolean schemaExists(String dbName, String schemaName) throws DataAccessException {
-//        useDatabase(dbName);
-//        List<String> results = jdbcTemplate.query(SqlQueryFactory.schemaExistsSql(schemaName), (rs, rowNum) -> rs.getString("schema_name"));
-//        return results.size() > 0;
-//    }
-
-    private boolean userExists(PGSchemaAndUser desired/*String dbName, String username*/) throws DataAccessException {
+    private boolean userExists(PGSchemaAndUser desired) throws DataAccessException {
         useDatabase(desired.getDatabase());
         List<String> results = jdbcTemplate.query(SqlQueryFactory.generateUserExistsSql(desired.getUsername()), (rs, rowNum) -> rs.getString("usename"));
         return results.size() > 0;
@@ -96,11 +89,11 @@ public class PostgreSqlDataAccessService {
             try {
                 DataSourceUtils.doCloseConnection(DataSourceUtils.getConnection(Objects.requireNonNull(jdbcTemplate.getDataSource())), jdbcTemplate.getDataSource());
                 DataSource dataSource = DataSourceBuilder.create()
-                        .url(environment.getProperty("spring.datasource.base-url")
+                        .url(operatorProperties.getBaseUrl()
                                 + database.toLowerCase()
                                 + "?sslmode=require")
-                        .username(environment.getProperty("spring.datasource.username"))
-                        .password(environment.getProperty("spring.datasource.password"))
+                        .username(pgProperties.getUsername())
+                        .password(pgProperties.getPassword())
                         .build();
 
                 jdbcTemplate.setDataSource(dataSource);
@@ -159,12 +152,20 @@ public class PostgreSqlDataAccessService {
     public void ensureUser(PGSchemaAndUser desired) throws DataAccessException {
         useDatabase(desired.getDatabase());
         if (!userExists(desired)) {
-            jdbcTemplate.execute(SqlQueryFactory.databaseUserCreateSql(desired.getUsername(), desired.getPassword()));
+            jdbcTemplate.execute(SqlQueryFactory.userCreateSql(desired.getUsername(), desired.getPassword()));
             log.debug("User " + desired.getUsername() + " created");
         } else {
             log.debug("User {} already exists", desired.getUsername());
         }
         grantPrivilegeToUser(desired);
+    }
+
+    public String resetUserPassword(String username) {
+        String password = RandomStringUtils.randomAlphanumeric(32);
+        jdbcTemplate.execute(SqlQueryFactory.resetUserPasswordSql(username, password));
+        log.debug("Reset password for user {}", username);
+
+        return password;
     }
 
 
@@ -174,29 +175,4 @@ public class PostgreSqlDataAccessService {
         jdbcTemplate.execute(SqlQueryFactory.generateGrantDefaultPrivilegesSql(pgSchemaAndUser.getSchemaName(), "all", pgSchemaAndUser.getUsername()));
         log.info("Privilege " + "all" + " granted to " + pgSchemaAndUser.getUsername() + " on schema " + pgSchemaAndUser.getSchemaName());
     }
-
-//    public String getUserPrivilegesOnSchema(String databaseName, String schemaName, String username) throws DataAccessException {
-//        useDatabase(databaseName);
-//
-//        log.info("Creating test table");
-//        jdbcTemplate.execute(SqlQueryFactory.generateCreateTestTable(schemaName));
-//
-//        List<String> privileges = jdbcTemplate.query(SqlQueryFactory.generateGetPrivileges(schemaName, username), (rs, rowNum) -> rs.getString("privilege_type"));
-//        log.info("Privileges for \"" + username + "\" on schema " + schemaName + ": " + privileges);
-//
-//        log.info("Dropping test table");
-//        jdbcTemplate.execute(SqlQueryFactory.generateDropTestTableSql(schemaName));
-//
-//        return String.join(",", privileges);
-//    }
-
-//    public void createSchemaUserAndSetPrivileges(String databaseName, String schemaName, String username, String password, List<String> privileges) throws DataAccessException {
-//        ensureSchema(databaseName, schemaName);
-//        ensureDatabaseUser(databaseName, username, password);
-//        for (String privilege : privileges) {
-//            if (Arrays.stream(Privilege.class.getEnumConstants()).anyMatch(e -> e.name().equals(privilege.toUpperCase().trim()))) {
-//                grantPrivilegeToUser(databaseName, schemaName, username, privilege);
-//            }
-//        }
-//    }
 }

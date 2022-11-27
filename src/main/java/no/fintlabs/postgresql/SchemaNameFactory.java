@@ -1,4 +1,4 @@
-package no.fintlabs.operator;
+package no.fintlabs.postgresql;
 
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 

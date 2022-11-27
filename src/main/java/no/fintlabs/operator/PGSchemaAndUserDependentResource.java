@@ -3,8 +3,8 @@ package no.fintlabs.operator;
 
 import io.javaoperatorsdk.operator.api.reconciler.Context;
 import no.fintlabs.FlaisExternalDependentResource;
-import no.fintlabs.model.PGSchemaAndUser;
-import no.fintlabs.service.PostgreSqlDataAccessService;
+import no.fintlabs.postgresql.PostgreSqlDataAccessService;
+import no.fintlabs.postgresql.SchemaNameFactory;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.stereotype.Component;
 
@@ -27,7 +27,6 @@ public class PGSchemaAndUserDependentResource extends FlaisExternalDependentReso
                 .database(primary.getSpec().getDatabaseName())
                 .schemaName(SchemaNameFactory.schemaNameFromMetadata(primary.getMetadata()))
                 .username(SchemaNameFactory.schemaNameFromMetadata(primary.getMetadata()))
-                .password(RandomStringUtils.randomAlphanumeric(32))
                 .build();
     }
 
@@ -43,10 +42,12 @@ public class PGSchemaAndUserDependentResource extends FlaisExternalDependentReso
     @Override
     public PGSchemaAndUser create(PGSchemaAndUser desired, PGSchemaAndUserCRD primary, Context<PGSchemaAndUserCRD> context) {
 
+        desired.setPassword(RandomStringUtils.randomAlphanumeric(32));
+
         pgService.ensureDatabase(desired.getDatabase());
         pgService.ensureSchema(desired);
         pgService.ensureUser(desired);
-        //pgService.grantPrivilegeToUser(dbName, schemaName, username, "all");
+
         return desired;
     }
 

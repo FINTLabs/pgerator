@@ -14,7 +14,11 @@ import java.util.List;
 @Component
 @ControllerConfiguration
 public class PGSchemaAndUserReconciler extends FlaisReconiler<PGSchemaAndUserCRD, PGSchemaAndUserSpec> {
-    public PGSchemaAndUserReconciler(FlaisWorkflow<PGSchemaAndUserCRD, PGSchemaAndUserSpec> workflow, List<? extends DependentResource<?, PGSchemaAndUserCRD>> eventSourceProviders, List<? extends Deleter<PGSchemaAndUserCRD>> deleters) {
+    public PGSchemaAndUserReconciler(
+            FlaisWorkflow<PGSchemaAndUserCRD, PGSchemaAndUserSpec> workflow,
+            List<? extends DependentResource<?, PGSchemaAndUserCRD>> eventSourceProviders,
+            List<? extends Deleter<PGSchemaAndUserCRD>> deleters) {
+
         super(workflow, eventSourceProviders, deleters);
     }
 }

@@ -1,4 +1,4 @@
-package no.fintlabs.service;
+package no.fintlabs.postgresql;
 
 import org.springframework.stereotype.Service;
 
@@ -42,11 +42,15 @@ public class SqlQueryFactory {
     }
 
     public static String schemaRenameSql(String oldName, String newName) {
-        return "alter schema \"" + oldName + "\" RENAME TO \"" + newName + "\";";
+        return "ALTER SCHEMA \"" + oldName + "\" RENAME TO \"" + newName + "\";";
     }
 
-    public static String databaseUserCreateSql(String username, String password) {
+    public static String userCreateSql(String username, String password) {
         return "CREATE USER \"" + username + "\" WITH PASSWORD '" + password + "'";
+    }
+
+    public static String resetUserPasswordSql(String username, String password) {
+        return "ALTER USER \"" + username + "\" WITH PASSWORD '" + password +  "';";
     }
 
     public static String generateGrantPrivilegeSql(String schemaName, String privilege, String username) {
