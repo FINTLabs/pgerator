@@ -42,6 +42,7 @@ public class PgService {
     }
 
     private boolean databaseExists(String dbName) throws DataAccessException {
+        log.debug("Check if database '{}' exists", dbName);
         List<String> results = jdbcTemplate.query(SqlFactory.databaseExistsSql(dbName), (rs, rowNum) -> rs.getString("datname"));
         return results.size() > 0;
     }
@@ -72,7 +73,7 @@ public class PgService {
 
     private void createDb(String dbName) throws DataAccessException {
         jdbcTemplate.execute(SqlFactory.createDatabaseSql(dbName));
-        log.info("Database created: " + dbName);
+        log.info("Database {} created!", dbName);
     }
 
     public void makeSchemaOrphanOrDelete(PGSchemaAndUser pgSchemaAndUser) throws DataAccessException {
@@ -96,8 +97,9 @@ public class PgService {
         jdbcTemplate.execute(SqlFactory.revokeDefaultPrivilegesSql(pgSchemaAndUser.getUsername(), pgSchemaAndUser.getSchemaName()));
         jdbcTemplate.execute(SqlFactory.revokeAllPriviligesSql(pgSchemaAndUser.getUsername(), pgSchemaAndUser.getSchemaName()));
         //jdbcTemplate.execute(SqlFactory.generateDropUserSql(pgSchemaAndUser.getUsername()));
+        aivenService.deleteConnectionPool(pgSchemaAndUser);
         aivenService.deleteUserForService(pgSchemaAndUser.getUsername());
-        log.info("User deleted:" + pgSchemaAndUser.getUsername());
+        log.info("User '{}' deleted", pgSchemaAndUser.getUsername());
     }
 
     private void useDatabase(String database) {
@@ -126,6 +128,7 @@ public class PgService {
 
     public void ensureDatabase(String database) {
         if (!databaseExists(database)) {
+            log.debug("Database '{}' does not exist. Proceeding to create...", database);
             createDb(database);
         }
     }
@@ -140,18 +143,19 @@ public class PgService {
                 );
 
 
-        log.info("Schema ensured: " + desired.getSchemaName());
+        log.info("Schema '{}' ensured", desired.getSchemaName());
     }
 
     private void createSchemaIfNotExits(PGSchemaAndUser pgSchemaAndUser) {
         useDatabase(pgSchemaAndUser.getDatabase());
         jdbcTemplate.execute(SqlFactory.schemaCreateIfNotExistSql(pgSchemaAndUser.getSchemaName()));
-        log.debug("Created schema with name {} ", pgSchemaAndUser.getSchemaName());
+        log.debug("Created schema with name '{}' ", pgSchemaAndUser.getSchemaName());
     }
 
     private void renameSchema(PGSchemaAndUser pgSchemaAndUser, String oldName) {
         useDatabase(pgSchemaAndUser.getDatabase());
         jdbcTemplate.execute(SqlFactory.schemaRenameSql(oldName, pgSchemaAndUser.getSchemaName()));
+        log.debug("Renamed schema '{}' to '{}'", pgSchemaAndUser.getSchemaName(), oldName);
     }
 
     private Optional<String> hasOrphanSchema(PGSchemaAndUser pgSchemaAndUser) {
@@ -159,6 +163,7 @@ public class PgService {
         List<String> results = jdbcTemplate.query(SqlFactory.schemaExistsSql(pgSchemaAndUser.getSchemaName() + "_orphan_%"), (rs, rowNum) -> rs.getString("schema_name"));
 
         if (results.size() == 1) {
+            log.debug("Schema '{}' is orphan.", pgSchemaAndUser.getSchemaName());
             return Optional.of(results.get(0));
         }
 
@@ -175,23 +180,24 @@ public class PgService {
 //            log.debug("User {} already exists", desired.getUsername());
 //        }
         aivenService.createUserForService(desired);
+        aivenService.createConnectionPool(desired);
         grantPrivilegeToUser(desired);
     }
 
-    public String resetUserPassword(String username) {
-        String password = RandomStringUtils.randomAlphanumeric(32);
-        jdbcTemplate.execute(SqlFactory.resetUserPasswordSql(username, password));
-        log.debug("Reset password for user {}", username);
+//    public String resetUserPassword(String username) {
+//        String password = RandomStringUtils.randomAlphanumeric(32);
+//        jdbcTemplate.execute(SqlFactory.resetUserPasswordSql(username, password));
+//        log.debug("Reset password for user {}", username);
+//
+//        return password;
+//    }
 
-        return password;
-    }
 
-
-    public void grantPrivilegeToUser(PGSchemaAndUser pgSchemaAndUser) throws DataAccessException {
+    private void grantPrivilegeToUser(PGSchemaAndUser pgSchemaAndUser) throws DataAccessException {
         useDatabase(pgSchemaAndUser.getDatabase());
         jdbcTemplate.execute(SqlFactory.grantPrivilegeOnSchemaSql(pgSchemaAndUser.getSchemaName(), "all", pgSchemaAndUser.getUsername()));
         jdbcTemplate.execute(SqlFactory.grantPrivilegeOnAllTablesInSchemaSql(pgSchemaAndUser.getSchemaName(), "all", pgSchemaAndUser.getUsername()));
         jdbcTemplate.execute(SqlFactory.grantDefaultPrivilegesSql(pgSchemaAndUser.getSchemaName(), "all", pgSchemaAndUser.getUsername()));
-        log.info("Privilege " + "all" + " granted to " + pgSchemaAndUser.getUsername() + " on schema " + pgSchemaAndUser.getSchemaName());
+        log.info("Privileges granted to '{}' on schema '{}'", pgSchemaAndUser.getUsername(), pgSchemaAndUser.getSchemaName());
     }
 }

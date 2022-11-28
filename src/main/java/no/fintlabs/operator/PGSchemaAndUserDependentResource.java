@@ -17,12 +17,10 @@ import java.util.Set;
 @Component
 public class PGSchemaAndUserDependentResource extends FlaisExternalDependentResource<PGSchemaAndUser, PGSchemaAndUserCRD, PGSchemaAndUserSpec> {
     private final PgService pgService;
-    private final AivenService aivenService;
 
-    public PGSchemaAndUserDependentResource(PGSchemaAndUserWorkflow workflow, PgService pgService, AivenService aivenService) {
+    public PGSchemaAndUserDependentResource(PGSchemaAndUserWorkflow workflow, PgService pgService) {
         super(PGSchemaAndUser.class, workflow);
         this.pgService = pgService;
-        this.aivenService = aivenService;
         setPollingPeriod(Duration.ofMinutes(10).toMillis());
     }
 
@@ -41,7 +39,7 @@ public class PGSchemaAndUserDependentResource extends FlaisExternalDependentReso
     public void delete(PGSchemaAndUserCRD primary, Context<PGSchemaAndUserCRD> context) {
         context.getSecondaryResource(PGSchemaAndUser.class)
                 .ifPresent(pgSchemaAndUser -> {
-                    aivenService.deleteConnectionPool(pgSchemaAndUser);
+                    //aivenService.deleteConnectionPool(pgSchemaAndUser);
                     pgService.deleteUser(pgSchemaAndUser);
                     pgService.makeSchemaOrphanOrDelete(pgSchemaAndUser);
                 });
@@ -55,8 +53,7 @@ public class PGSchemaAndUserDependentResource extends FlaisExternalDependentReso
         pgService.ensureDatabase(desired.getDatabase());
         pgService.ensureSchema(desired);
         pgService.ensureUser(desired);
-        pgService.grantPrivilegeToUser(desired);
-        aivenService.createConnectionPool(desired);
+        //aivenService.createConnectionPool(desired);
 
         return desired;
     }
