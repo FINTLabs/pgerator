@@ -26,11 +26,11 @@ public class SqlFactory {
                 schema);
     }
 
-    public static String generateUserExistsSql(String username) {
+    public static String userExistsSql(String username) {
         return "SELECT usename FROM pg_catalog.pg_user WHERE lower(usename) = '" + username.toLowerCase() + "'";
     }
 
-    public static String generateCreateDatabaseSql(String dbName) {
+    public static String createDatabaseSql(String dbName) {
         return "CREATE DATABASE " + dbName;
     }
 
@@ -62,12 +62,24 @@ public class SqlFactory {
         return "ALTER USER \"" + username + "\" WITH PASSWORD '" + password + "';";
     }
 
-    public static String generateGrantPrivilegeSql(String schemaName, String privilege, String username) {
-        return "GRANT " + privilege + " ON ALL TABLES IN SCHEMA \"" + schemaName + "\" TO \"" + username + "\"";
+    public static String grantPrivilegeSql(String schemaName, String privilege, String username) {
+        //return "GRANT " + privilege + " ON SCHEMA \"" + schemaName + "\" TO \"" + username + "\"";
+        return String.format(
+                "GRAN %s ON SCHEMA \"%s\" TO \"%s\";",
+                privilege,
+                schemaName,
+                username
+        );
     }
 
-    public static String generateGrantDefaultPrivilegesSql(String schemaName, String privilege, String username) {
-        return "ALTER DEFAULT PRIVILEGES IN SCHEMA \"" + schemaName + "\" GRANT " + privilege + " ON TABLES TO \"" + username + "\"";
+    public static String grantDefaultPrivilegesSql(String schemaName, String privilege, String username) {
+        //return "ALTER DEFAULT PRIVILEGES IN SCHEMA \"" + schemaName + "\" GRANT " + privilege + " ON TABLES TO \"" + username + "\"";
+        return String.format(
+                "ALTER DEFAULT PRIVILEGES IN SCHEMA \"%s\" GRANT %s ON TABLES TO \"%s\";",
+                schemaName,
+                privilege,
+                username
+        );
     }
 
     public static String deleteSchemaSql(String schemaName) {

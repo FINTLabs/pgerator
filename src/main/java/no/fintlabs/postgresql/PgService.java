@@ -48,7 +48,7 @@ public class PgService {
 
     private boolean userExists(PGSchemaAndUser desired) throws DataAccessException {
         useDatabase(desired.getDatabase());
-        List<String> results = jdbcTemplate.query(SqlFactory.generateUserExistsSql(desired.getUsername()), (rs, rowNum) -> rs.getString("usename"));
+        List<String> results = jdbcTemplate.query(SqlFactory.userExistsSql(desired.getUsername()), (rs, rowNum) -> rs.getString("usename"));
         return results.size() > 0;
     }
 
@@ -71,7 +71,7 @@ public class PgService {
     }
 
     private void createDb(String dbName) throws DataAccessException {
-        jdbcTemplate.execute(SqlFactory.generateCreateDatabaseSql(dbName));
+        jdbcTemplate.execute(SqlFactory.createDatabaseSql(dbName));
         log.info("Database created: " + dbName);
     }
 
@@ -189,8 +189,8 @@ public class PgService {
 
     public void grantPrivilegeToUser(PGSchemaAndUser pgSchemaAndUser) throws DataAccessException {
         useDatabase(pgSchemaAndUser.getDatabase());
-        jdbcTemplate.execute(SqlFactory.generateGrantPrivilegeSql(pgSchemaAndUser.getSchemaName(), "all", pgSchemaAndUser.getUsername()));
-        jdbcTemplate.execute(SqlFactory.generateGrantDefaultPrivilegesSql(pgSchemaAndUser.getSchemaName(), "all", pgSchemaAndUser.getUsername()));
+        jdbcTemplate.execute(SqlFactory.grantPrivilegeSql(pgSchemaAndUser.getSchemaName(), "all", pgSchemaAndUser.getUsername()));
+        jdbcTemplate.execute(SqlFactory.grantDefaultPrivilegesSql(pgSchemaAndUser.getSchemaName(), "all", pgSchemaAndUser.getUsername()));
         log.info("Privilege " + "all" + " granted to " + pgSchemaAndUser.getUsername() + " on schema " + pgSchemaAndUser.getSchemaName());
     }
 }
