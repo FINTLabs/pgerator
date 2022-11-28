@@ -189,7 +189,8 @@ public class PgService {
 
     public void grantPrivilegeToUser(PGSchemaAndUser pgSchemaAndUser) throws DataAccessException {
         useDatabase(pgSchemaAndUser.getDatabase());
-        jdbcTemplate.execute(SqlFactory.grantPrivilegeSql(pgSchemaAndUser.getSchemaName(), "all", pgSchemaAndUser.getUsername()));
+        jdbcTemplate.execute(SqlFactory.grantPrivilegeOnSchemaSql(pgSchemaAndUser.getSchemaName(), "all", pgSchemaAndUser.getUsername()));
+        jdbcTemplate.execute(SqlFactory.grantPrivilegeOnAllTablesInSchemaSql(pgSchemaAndUser.getSchemaName(), "all", pgSchemaAndUser.getUsername()));
         jdbcTemplate.execute(SqlFactory.grantDefaultPrivilegesSql(pgSchemaAndUser.getSchemaName(), "all", pgSchemaAndUser.getUsername()));
         log.info("Privilege " + "all" + " granted to " + pgSchemaAndUser.getUsername() + " on schema " + pgSchemaAndUser.getSchemaName());
     }

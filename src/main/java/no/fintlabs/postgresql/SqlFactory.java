@@ -62,10 +62,20 @@ public class SqlFactory {
         return "ALTER USER \"" + username + "\" WITH PASSWORD '" + password + "';";
     }
 
-    public static String grantPrivilegeSql(String schemaName, String privilege, String username) {
+    public static String grantPrivilegeOnSchemaSql(String schemaName, String privilege, String username) {
         //return "GRANT " + privilege + " ON SCHEMA \"" + schemaName + "\" TO \"" + username + "\"";
         return String.format(
-                "GRAN %s ON SCHEMA \"%s\" TO \"%s\";",
+                "GRANT %s ON SCHEMA \"%s\" TO \"%s\";",
+                privilege,
+                schemaName,
+                username
+        );
+    }
+
+    public static String grantPrivilegeOnAllTablesInSchemaSql(String schemaName, String privilege, String username) {
+        //return "GRANT " + privilege + " ON SCHEMA \"" + schemaName + "\" TO \"" + username + "\"";
+        return String.format(
+                "GRANT %s ON ALL TABLES IN SCHEMA \"%s\" TO \"%s\";",
                 privilege,
                 schemaName,
                 username
