@@ -4,7 +4,6 @@ package no.fintlabs.operator;
 import io.javaoperatorsdk.operator.api.reconciler.Context;
 import lombok.extern.slf4j.Slf4j;
 import no.fintlabs.FlaisExternalDependentResource;
-import no.fintlabs.aiven.AivenService;
 import no.fintlabs.postgresql.PgService;
 import no.fintlabs.postgresql.SchemaNameFactory;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -26,7 +25,7 @@ public class PGSchemaAndUserDependentResource extends FlaisExternalDependentReso
 
     @Override
     protected PGSchemaAndUser desired(PGSchemaAndUserCRD primary, Context<PGSchemaAndUserCRD> context) {
-        log.debug("Desired PGSchemaAndUser for {}", primary.getMetadata().getName());
+        log.debug("Desired PGSchemaAndUser for '{}'", primary.getMetadata().getName());
 
         return PGSchemaAndUser.builder()
                 .database(primary.getSpec().getDatabaseName())
@@ -39,10 +38,10 @@ public class PGSchemaAndUserDependentResource extends FlaisExternalDependentReso
     public void delete(PGSchemaAndUserCRD primary, Context<PGSchemaAndUserCRD> context) {
         context.getSecondaryResource(PGSchemaAndUser.class)
                 .ifPresent(pgSchemaAndUser -> {
-                    //aivenService.deleteConnectionPool(pgSchemaAndUser);
                     pgService.deleteUser(pgSchemaAndUser);
                     pgService.makeSchemaOrphanOrDelete(pgSchemaAndUser);
                 });
+        //pgService.useDatabase("defaultdb");
     }
 
     @Override
@@ -53,7 +52,7 @@ public class PGSchemaAndUserDependentResource extends FlaisExternalDependentReso
         pgService.ensureDatabase(desired.getDatabase());
         pgService.ensureSchema(desired);
         pgService.ensureUser(desired);
-        //aivenService.createConnectionPool(desired);
+        //pgService.useDatabase("defaultdb");
 
         return desired;
     }
