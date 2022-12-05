@@ -33,7 +33,7 @@ spec:
         - name: pgerator
           securityContext:
             {}
-          image: "ghcr.io/fintlabs/fint-pgerator:sha-dde1811"
+          image: "ghcr.io/fintlabs/fint-pgerator:sha-0000000"
           imagePullPolicy: IfNotPresent
           env:
             - name: logging.level.no.fintlabs
