@@ -48,6 +48,14 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
+      ## Alpha cluster ##
+      - name: Bake alpha manifests with Kustomize
+        uses: azure/k8s-bake@v2.2
+        with:
+          renderEngine: 'kustomize'
+          kustomizationPath: 'kustomize/overlays/alpha'
+        id: bake-alpha
+
       - name: Set the target Alpha cluster.
         uses: azure/aks-set-context@v1
         with:
