@@ -41,7 +41,7 @@ public class AivenService {
 
             desired.setPassword(aivenServiceUser.getAivenPGServiceUser().getPassword());
         } catch (WebClientResponseException e) {
-            log.debug("Creating connection pool returned error code {} and body {}", e.getStatusText(), e.getResponseBodyAsString());
+            log.debug("Creating Aiven service user returned error code {} and body {}", e.getStatusText(), e.getResponseBodyAsString());
         }
 
 
@@ -90,7 +90,7 @@ public class AivenService {
         log.debug("Creating connection pool for user '{}' ", pgSchemaAndUser.getUsername());
 
         try {
-            String block = webClient
+            CreateConnectionPoolRepsonse block = webClient
                     .post()
                     .uri("/project/{project_name}/service/{service_name}/connection_pool", aivenProperties.getProject(), aivenProperties.getService())
                     .body(BodyInserters.fromValue(ConnectionPool
@@ -102,9 +102,9 @@ public class AivenService {
                     .retrieve()
                     // TODO: 28/11/2022 Needs improvement
                     .onStatus(httpStatus -> httpStatus.value() == 409, clientResponse -> Mono.empty())
-                    .bodyToMono(String.class)
+                    .bodyToMono(CreateConnectionPoolRepsonse.class)
                     .block();
-            log.debug("Creating connection pool response: {}", block);
+            log.debug("Creating connection pool response: {}", block.getMessage());
         } catch (WebClientResponseException e) {
             log.debug("Creating connection pool returned error code {} and body {}", e.getStatusCode(), e.getResponseBodyAsString());
         }

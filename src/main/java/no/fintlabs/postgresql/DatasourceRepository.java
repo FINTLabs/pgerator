@@ -25,7 +25,7 @@ public class DatasourceRepository {
         this.pgProperties = pgProperties;
         dataSources = new HashMap<>();
 
-        dataSources.put(hikariDataSource.getCatalog() + "-pool", hikariDataSource);
+        dataSources.put(hikariDataSource.getPoolName(), hikariDataSource);
     }
 
     public HikariDataSource createDatasource(String database) {
@@ -43,13 +43,19 @@ public class DatasourceRepository {
         dataSource.setMinimumIdle(hikariConfig.getMinimumIdle());
         dataSource.setPoolName(database + "-pool");
         dataSources.put(dataSource.getPoolName(), dataSource);
+        logDatasource();
 
         return dataSource;
     }
 
     public HikariDataSource getOrNew(String database) {
-        log.debug("Got {} data sources in data source repository", dataSources.size());
+        logDatasource();
         log.debug("Getting data source for database '{}'", database);
         return dataSources.getOrDefault(database + "pool", createDatasource(database));
+    }
+
+    private void logDatasource() {
+        log.debug("Got {} data sources in data source repository", dataSources.size());
+        dataSources.forEach((datasourceName, hikariDataSource) -> log.debug("\t- {}", datasourceName));
     }
 }
