@@ -52,7 +52,7 @@ public class PGSchemaAndUserSecretDependentResource extends FlaisKubernetesDepen
                 .addToData("fint.database.password", encode(pgSchemaAndUser.getPassword()))
                 .addToData("fint.database.url", encode(properties.getPoolBaseUrl()
                         + pgSchemaAndUser.getSchemaName().toLowerCase()
-                        + "?sslmode=require"))
+                        + "?sslmode=require&prepareThreshold=0"))
                 .build();
     }
 
