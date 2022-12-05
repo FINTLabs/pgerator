@@ -36,7 +36,4 @@ out/
 .vscode/
 
 .DS_Store
-src/main/resources/application.properties
 
-lib/
-src/main/resources/application.yaml
