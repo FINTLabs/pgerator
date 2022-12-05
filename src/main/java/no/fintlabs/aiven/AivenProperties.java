@@ -1,4 +1,4 @@
-package no.fintlabs;
+package no.fintlabs.aiven;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -8,8 +8,11 @@ import org.springframework.context.annotation.Configuration;
 @Getter
 @Setter
 @Configuration
-@ConfigurationProperties(prefix = "fint.data")
-public class OperatorProperties {
+@ConfigurationProperties(prefix = "fint.aiven")
+public class AivenProperties {
+
     private String baseUrl;
-    private String poolBaseUrl;
+    private String token;
+    private String project = "fintlabs";
+    private String service;
 }

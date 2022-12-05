@@ -8,24 +8,20 @@ import lombok.extern.slf4j.Slf4j;
 import no.fintlabs.FlaisKubernetesDependentResource;
 import no.fintlabs.FlaisWorkflow;
 import no.fintlabs.OperatorProperties;
-import no.fintlabs.postgresql.PgService;
 import org.springframework.stereotype.Component;
 
 import java.util.Base64;
 import java.util.HashMap;
-import java.util.Objects;
 
 @Component
 @Slf4j
 public class PGSchemaAndUserSecretDependentResource extends FlaisKubernetesDependentResource<Secret, PGSchemaAndUserCRD, PGSchemaAndUserSpec> {
 
     private final OperatorProperties properties;
-    private final PgService pgService;
 
-    public PGSchemaAndUserSecretDependentResource(FlaisWorkflow<PGSchemaAndUserCRD, PGSchemaAndUserSpec> workflow, KubernetesClient kubernetesClient, PGSchemaAndUserDependentResource dependentResource, OperatorProperties properties, PgService pgService) {
+    public PGSchemaAndUserSecretDependentResource(FlaisWorkflow<PGSchemaAndUserCRD, PGSchemaAndUserSpec> workflow, KubernetesClient kubernetesClient, PGSchemaAndUserDependentResource dependentResource, OperatorProperties properties) {
         super(Secret.class, workflow, kubernetesClient);
         this.properties = properties;
-        this.pgService = pgService;
         dependsOn(dependentResource);
     }
 
@@ -33,15 +29,11 @@ public class PGSchemaAndUserSecretDependentResource extends FlaisKubernetesDepen
     protected Secret desired(PGSchemaAndUserCRD primary, Context<PGSchemaAndUserCRD> context) {
         log.debug("Desired secret for {}", primary.getMetadata().getName());
 
-        return context.getSecondaryResource(Secret.class)
-                .orElse(generateSecret(primary, context));
+        return generateSecret(primary, context);
     }
 
     private Secret generateSecret(PGSchemaAndUserCRD primary, Context<PGSchemaAndUserCRD> context) {
         PGSchemaAndUser pgSchemaAndUser = context.getSecondaryResource(PGSchemaAndUser.class).orElseThrow();
-        if (Objects.isNull(pgSchemaAndUser.getPassword())) {
-            pgSchemaAndUser.setPassword(pgService.resetUserPassword(pgSchemaAndUser.getUsername()));
-        }
         HashMap<String, String> labels = new HashMap<>(primary.getMetadata().getLabels());
         labels.put("app.kubernetes.io/managed-by", "pgerator");
 
@@ -54,8 +46,8 @@ public class PGSchemaAndUserSecretDependentResource extends FlaisKubernetesDepen
                 .addToData("fint.database.schema", encode(pgSchemaAndUser.getSchemaName()))
                 .addToData("fint.database.username", encode(pgSchemaAndUser.getUsername()))
                 .addToData("fint.database.password", encode(pgSchemaAndUser.getPassword()))
-                .addToData("fint.database.url", encode(properties.getBaseUrl()
-                        + pgSchemaAndUser.getDatabase().toLowerCase()
+                .addToData("fint.database.url", encode(properties.getPoolBaseUrl()
+                        + pgSchemaAndUser.getSchemaName().toLowerCase()
                         + "?sslmode=require"))
                 .build();
     }
@@ -64,6 +56,7 @@ public class PGSchemaAndUserSecretDependentResource extends FlaisKubernetesDepen
         return Base64.getEncoder().encodeToString(value.getBytes());
     }
 
+    @SuppressWarnings("unused")
     private String decode(String value) {
         return new String(Base64.getDecoder().decode(value.getBytes()));
     }

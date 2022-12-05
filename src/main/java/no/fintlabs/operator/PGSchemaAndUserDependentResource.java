@@ -2,6 +2,7 @@ package no.fintlabs.operator;
 
 
 import io.javaoperatorsdk.operator.api.reconciler.Context;
+import lombok.extern.slf4j.Slf4j;
 import no.fintlabs.FlaisExternalDependentResource;
 import no.fintlabs.postgresql.PgService;
 import no.fintlabs.postgresql.SchemaNameFactory;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Component;
 import java.time.Duration;
 import java.util.Set;
 
+@Slf4j
 @Component
 public class PGSchemaAndUserDependentResource extends FlaisExternalDependentResource<PGSchemaAndUser, PGSchemaAndUserCRD, PGSchemaAndUserSpec> {
     private final PgService pgService;
@@ -23,6 +25,8 @@ public class PGSchemaAndUserDependentResource extends FlaisExternalDependentReso
 
     @Override
     protected PGSchemaAndUser desired(PGSchemaAndUserCRD primary, Context<PGSchemaAndUserCRD> context) {
+        log.debug("Desired PGSchemaAndUser for '{}'", primary.getMetadata().getName());
+
         return PGSchemaAndUser.builder()
                 .database(primary.getSpec().getDatabaseName())
                 .schemaName(SchemaNameFactory.schemaNameFromMetadata(primary.getMetadata()))
@@ -37,6 +41,7 @@ public class PGSchemaAndUserDependentResource extends FlaisExternalDependentReso
                     pgService.deleteUser(pgSchemaAndUser);
                     pgService.makeSchemaOrphanOrDelete(pgSchemaAndUser);
                 });
+        //pgService.useDatabase("defaultdb");
     }
 
     @Override
@@ -47,6 +52,7 @@ public class PGSchemaAndUserDependentResource extends FlaisExternalDependentReso
         pgService.ensureDatabase(desired.getDatabase());
         pgService.ensureSchema(desired);
         pgService.ensureUser(desired);
+        //pgService.useDatabase("defaultdb");
 
         return desired;
     }
