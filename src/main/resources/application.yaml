@@ -1,19 +1,11 @@
 spring:
   application:
     name: pgerator
-  datasource:
-    hikari:
-      minimum-idle: 2
-      #idle-timeout: 10000
-      maximum-pool-size: 5
-      pool-name: defaultdb-pool
-      #max-lifetime: 60000 #1800000
-      #connection-timeout: 600000
+
 
 logging:
   level:
     no.fintlabs: debug
-    #com.zaxxer.hikari: TRACE
 
 fint:
   aiven:

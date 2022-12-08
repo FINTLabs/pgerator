@@ -10,6 +10,5 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @ConfigurationProperties(prefix = "fint.data")
 public class OperatorProperties {
-    private String baseUrl;
     private String poolBaseUrl;
 }

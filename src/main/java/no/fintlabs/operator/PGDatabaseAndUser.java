@@ -7,9 +7,8 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PGSchemaAndUser {
+public class PGDatabaseAndUser {
     private String database;
-    private String schemaName;
     private String username;
     private String password;
 }

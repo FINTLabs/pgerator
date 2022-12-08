@@ -13,11 +13,11 @@ import java.util.List;
 @Slf4j
 @Component
 @ControllerConfiguration
-public class PGSchemaAndUserReconciler extends FlaisReconiler<PGSchemaAndUserCRD, PGSchemaAndUserSpec> {
-    public PGSchemaAndUserReconciler(
-            FlaisWorkflow<PGSchemaAndUserCRD, PGSchemaAndUserSpec> workflow,
-            List<? extends DependentResource<?, PGSchemaAndUserCRD>> eventSourceProviders,
-            List<? extends Deleter<PGSchemaAndUserCRD>> deleters) {
+public class PGDatabaseAndUserReconciler extends FlaisReconiler<PGDatabaseAndUserCRD, PGDatabaseAndUserSpec> {
+    public PGDatabaseAndUserReconciler(
+            FlaisWorkflow<PGDatabaseAndUserCRD, PGDatabaseAndUserSpec> workflow,
+            List<? extends DependentResource<?, PGDatabaseAndUserCRD>> eventSourceProviders,
+            List<? extends Deleter<PGDatabaseAndUserCRD>> deleters) {
 
         super(workflow, eventSourceProviders, deleters);
     }

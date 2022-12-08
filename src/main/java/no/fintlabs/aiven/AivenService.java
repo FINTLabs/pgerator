@@ -1,8 +1,7 @@
 package no.fintlabs.aiven;
 
 import lombok.extern.slf4j.Slf4j;
-import no.fintlabs.operator.PGSchemaAndUser;
-import org.springframework.http.HttpStatus;
+import no.fintlabs.operator.PGDatabaseAndUser;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -10,7 +9,9 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import reactor.core.publisher.Mono;
 
 import java.util.Collections;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 @Slf4j
 @Component
@@ -25,37 +26,58 @@ public class AivenService {
         this.aivenProperties = aivenProperties;
     }
 
-    public void createUserForService(PGSchemaAndUser desired) {
+    public void createDatabaseForService(PGDatabaseAndUser desired) {
+
+        try {
+            webClient.post()
+                    .uri("/project/{project_name}/service/{service_name}/db", aivenProperties.getProject(), aivenProperties.getService())
+                    .body(BodyInserters.fromValue(Collections.singletonMap("database", desired.getDatabase())))
+                    .retrieve()
+                    .onStatus(httpStatus -> httpStatus.value() == 409, clientResponse -> Mono.empty())
+                    .bodyToMono(AivenServiceUser.class)
+                    .block();
+        } catch (WebClientResponseException e) {
+            log.debug("Creating Aiven service db returned error code {} and body {}", e.getStatusText(), e.getResponseBodyAsString());
+        }
+    }
+
+    public Optional<AivenPGDatabase> getDatabase(String database) {
+
+        try {
+            return Objects.requireNonNull(webClient.get()
+                            .uri("/project/{project_name}/service/{service_name}/db", aivenProperties.getProject(), aivenProperties.getService())
+                            .retrieve()
+                            .bodyToMono(AivenPGDatabaseResponse.class)
+                            .block())
+                    .getDatabases()
+                    .stream()
+                    .filter(aivenPGDatabase -> aivenPGDatabase.getDatabaseName().equals(database))
+                    .findFirst();
+        } catch (WebClientResponseException e) {
+            log.debug("Could not find  database '{}'.", database);
+            return Optional.empty();
+        }
+    }
+
+    public void createUserForService(PGDatabaseAndUser desired) {
 
         try {
             AivenServiceUser aivenServiceUser = getServiceUser(desired.getUsername()).orElseGet(() -> {
-                log.debug("User not found.");
+                log.debug("Creating Aiven PG service user");
                 return webClient.post()
                         .uri("/project/{project_name}/service/{service_name}/user", aivenProperties.getProject(), aivenProperties.getService())
                         .body(BodyInserters.fromValue(Collections.singletonMap("username", desired.getUsername())))
                         .retrieve()
+                        .onStatus(httpStatus -> httpStatus.value() == 409, clientResponse -> Mono.empty())
                         .bodyToMono(AivenServiceUser.class)
                         .block();
             });
-            log.debug("Created Aiven PG service user");
+
 
             desired.setPassword(aivenServiceUser.getAivenPGServiceUser().getPassword());
         } catch (WebClientResponseException e) {
             log.debug("Creating Aiven service user returned error code {} and body {}", e.getStatusText(), e.getResponseBodyAsString());
         }
-
-
-//        log.debug("Creating user '{}' for service '{}'", desired.getUsername(), aivenProperties.getService());
-//
-//        AivenServiceUser aivenServiceUser = Optional.ofNullable(webClient.post()
-//                        .uri("/project/{project_name}/service/{service_name}/user", aivenProperties.getProject(), aivenProperties.getService())
-//                        .body(BodyInserters.fromValue(Collections.singletonMap("username", desired.getUsername())))
-//                        .retrieve()
-//                        .bodyToMono(AivenServiceUser.class)
-//                        .block())
-//                .orElseThrow();
-
-
     }
 
     public void deleteUserForService(String username) {
@@ -67,6 +89,24 @@ public class AivenService {
                 .retrieve()
                 .bodyToMono(Void.class)
                 .block();
+    }
+
+
+    public Set<PGDatabaseAndUser> getUserAndDatabase(String username, String databaseName) {
+        Optional<AivenServiceUser> serviceUser = getServiceUser(username);
+        Optional<AivenPGDatabase> database = getDatabase(databaseName);
+
+        if (serviceUser.isPresent() && database.isPresent()) {
+            return Collections.singleton(PGDatabaseAndUser
+                    .builder()
+                    .database(database.get().getDatabaseName())
+                    .username(serviceUser.get().getAivenPGServiceUser().getUsername())
+                    .password(serviceUser.get().getAivenPGServiceUser().getPassword())
+                    .build()
+            );
+        }
+
+        return Collections.emptySet();
     }
 
     public Optional<AivenServiceUser> getServiceUser(String username) {
@@ -86,8 +126,8 @@ public class AivenService {
         }
     }
 
-    public void createConnectionPool(PGSchemaAndUser pgSchemaAndUser) {
-        log.debug("Creating connection pool for user '{}' ", pgSchemaAndUser.getUsername());
+    public void createConnectionPool(PGDatabaseAndUser pgDatabaseAndUser) {
+        log.debug("Creating connection pool for user '{}' ", pgDatabaseAndUser.getUsername());
 
         try {
             CreateConnectionPoolRepsonse block = webClient
@@ -95,9 +135,9 @@ public class AivenService {
                     .uri("/project/{project_name}/service/{service_name}/connection_pool", aivenProperties.getProject(), aivenProperties.getService())
                     .body(BodyInserters.fromValue(ConnectionPool
                             .builder()
-                            .username(pgSchemaAndUser.getUsername())
-                            .database(pgSchemaAndUser.getDatabase())
-                            .poolName(pgSchemaAndUser.getUsername())
+                            .username(pgDatabaseAndUser.getUsername())
+                            .database(pgDatabaseAndUser.getDatabase())
+                            .poolName(pgDatabaseAndUser.getUsername())
                             .build()))
                     .retrieve()
                     // TODO: 28/11/2022 Needs improvement
@@ -110,15 +150,16 @@ public class AivenService {
         }
     }
 
-    public void deleteConnectionPool(PGSchemaAndUser pgSchemaAndUser) {
-        log.debug("Removing connection pool for user '{}' ", pgSchemaAndUser.getUsername());
+    public void deleteConnectionPool(PGDatabaseAndUser pgDatabaseAndUser) {
+        log.debug("Removing connection pool for user '{}' ", pgDatabaseAndUser.getUsername());
 
         webClient
                 .delete()
-                .uri("/project/{project_name}/service/{service_name}/connection_pool/{pool_name}", aivenProperties.getProject(), aivenProperties.getService(), pgSchemaAndUser.getUsername())
+                .uri("/project/{project_name}/service/{service_name}/connection_pool/{pool_name}", aivenProperties.getProject(), aivenProperties.getService(), pgDatabaseAndUser.getUsername())
                 .retrieve()
                 .bodyToMono(Void.class)
                 .block();
     }
+
 
 }

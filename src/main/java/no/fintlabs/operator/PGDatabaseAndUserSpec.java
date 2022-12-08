@@ -4,6 +4,5 @@ import lombok.Data;
 import no.fintlabs.FlaisSpec;
 
 @Data
-public class PGSchemaAndUserSpec implements FlaisSpec {
-    private String databaseName;
+public class PGDatabaseAndUserSpec implements FlaisSpec {
 }
