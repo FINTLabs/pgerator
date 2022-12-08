@@ -10,4 +10,4 @@ resources:
   - serviceaccount.yaml
   - rolebinding.yaml
   - namespace.yaml
-  - pgschemaandusers.fintlabs.no-v1.yml
+  - pgdatabaseandusers.fintlabs.no-v1.yml
