@@ -37,3 +37,4 @@ out/
 
 .DS_Store
 
+/kustomize/base/pgdatabaseandusers.fintlabs.no-v1.yml

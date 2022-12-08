@@ -9,8 +9,8 @@ import no.fintlabs.FlaisStatus;
 
 @Group("fintlabs.no")
 @Version("v1alpha1")
-@Kind("PGSchemaAndUser")
-public class PGSchemaAndUserCRD extends FlaisCrd<PGSchemaAndUserSpec> implements Namespaced {
+@Kind("PGDatabaseAndUser")
+public class PGDatabaseAndUserCRD extends FlaisCrd<PGDatabaseAndUserSpec> implements Namespaced {
 
     @Override
     protected FlaisStatus initStatus() {

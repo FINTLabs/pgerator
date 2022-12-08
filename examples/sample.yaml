@@ -1,5 +1,5 @@
 apiVersion: "fintlabs.no/v1alpha1"
-kind: PGSchemaAndUser
+kind: PGDatabaseAndUser
 metadata:
   name: fint-betaling-backend
   labels:
@@ -10,5 +10,4 @@ metadata:
     app.kubernetes.io/part-of: fint-betaling
     fintlabs.no/team: core
     fintlabs.no/org-id: rogfk.no
-spec:
-  databaseName: fint_betaling
+

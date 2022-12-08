@@ -1,5 +1,5 @@
 apiVersion: "fintlabs.no/v1alpha1"
-kind: PGSchemaAndUser
+kind: PGDatabaseAndUser
 metadata:
   name: flais-developer-backend
   labels:
@@ -10,5 +10,4 @@ metadata:
     app.kubernetes.io/part-of: flais-developer
     fintlabs.no/team: flais
     fintlabs.no/org-id: flais.io
-spec:
-  databaseName: flais_developer
+
