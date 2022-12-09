@@ -27,10 +27,21 @@ public class PGDatabaseAndUserDependentResource extends FlaisExternalDependentRe
     protected PGDatabaseAndUser desired(PGDatabaseAndUserCRD primary, Context<PGDatabaseAndUserCRD> context) {
         log.debug("Desired PGSchemaAndUser for '{}'", primary.getMetadata().getName());
 
-        return PGDatabaseAndUser.builder()
-                .database(NameFactory.createDatabaseName(primary))
-                .username(NameFactory.createDatabaseUserName(primary))
-                .build();
+        return context.getSecondaryResource(PGDatabaseAndUser.class)
+                .map(o ->
+                        PGDatabaseAndUser.builder()
+                                .database(o.getDatabase())
+                                .username(o.getUsername())
+                                .build()
+                )
+                .orElseGet(() ->
+                        PGDatabaseAndUser.builder()
+                                .database(NameFactory.createDatabaseName(primary))
+                                .username(NameFactory.createDatabaseUserName(primary))
+                                .build()
+                );
+
+
     }
 
     @Override
