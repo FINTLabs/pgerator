@@ -11,6 +11,8 @@ import org.springframework.stereotype.Component;
 import java.time.Duration;
 import java.util.Set;
 
+import static no.fintlabs.operator.NameFactory.createDatabaseAndUserName;
+
 @Slf4j
 @Component
 public class PGDatabaseAndUserDependentResource extends FlaisExternalDependentResource<PGDatabaseAndUser, PGDatabaseAndUserCRD, PGDatabaseAndUserSpec> {
@@ -34,11 +36,13 @@ public class PGDatabaseAndUserDependentResource extends FlaisExternalDependentRe
                                 .username(o.getUsername())
                                 .build()
                 )
-                .orElseGet(() ->
-                        PGDatabaseAndUser.builder()
-                                .database(NameFactory.createDatabaseName(primary))
-                                .username(NameFactory.createDatabaseUserName(primary))
-                                .build()
+                .orElseGet(() -> {
+                    String databaseName = createDatabaseAndUserName(primary);
+                    return PGDatabaseAndUser.builder()
+                                .database(databaseName)
+                                .username(databaseName)
+                                .build();
+                        }
                 );
 
 
@@ -68,10 +72,7 @@ public class PGDatabaseAndUserDependentResource extends FlaisExternalDependentRe
     @Override
     public Set<PGDatabaseAndUser> fetchResources(PGDatabaseAndUserCRD primaryResource) {
 
-        return aivenService.getUserAndDatabase(
-                NameFactory.createDatabaseUserName(primaryResource),
-                NameFactory.createDatabaseUserName(primaryResource)
-        );
+        return aivenService.getUserAndDatabase("noop");
 
     }
 }

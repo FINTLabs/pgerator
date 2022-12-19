@@ -1,22 +1,23 @@
 package no.fintlabs.operator;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.commons.lang3.StringUtils;
 
 public class NameFactory {
 
-    public static String createDatabaseName(PGDatabaseAndUserCRD crd) {
+    public static String createDatabaseAndUserName(PGDatabaseAndUserCRD crd) {
         String name = String.format(
                 "%s_%s_%s",
                 crd.getMetadata().getLabels().get("fintlabs.no/org-id").replaceAll("\\.", "-"),
                 crd.getMetadata().getLabels().get("fintlabs.no/team"),
-                crd.getMetadata().getName()
+                RandomStringUtils.randomAlphabetic(6)
         );
 
-        return StringUtils.substring(name, 0, 40);
+        if (name.length() > 40) {
+            throw new IllegalArgumentException("Database name to long. It can be max 40 characters.");
+        }
+
+        return name;
     }
 
-    public static String createDatabaseUserName(PGDatabaseAndUserCRD crd) {
-        return createDatabaseName(crd);
-    }
+
 }

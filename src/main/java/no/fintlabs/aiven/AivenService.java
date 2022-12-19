@@ -92,9 +92,9 @@ public class AivenService {
     }
 
 
-    public Set<PGDatabaseAndUser> getUserAndDatabase(String username, String databaseName) {
-        Optional<AivenServiceUser> serviceUser = getServiceUser(username);
-        Optional<AivenPGDatabase> database = getDatabase(databaseName);
+    public Set<PGDatabaseAndUser> getUserAndDatabase(String databaseAndUsername) {
+        Optional<AivenServiceUser> serviceUser = getServiceUser(databaseAndUsername);
+        Optional<AivenPGDatabase> database = getDatabase(databaseAndUsername);
 
         if (serviceUser.isPresent() && database.isPresent()) {
             return Collections.singleton(PGDatabaseAndUser
