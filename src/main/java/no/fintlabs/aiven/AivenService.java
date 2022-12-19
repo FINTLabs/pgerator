@@ -92,18 +92,22 @@ public class AivenService {
     }
 
 
-    public Set<PGDatabaseAndUser> getUserAndDatabase(String username, String databaseName) {
-        Optional<AivenServiceUser> serviceUser = getServiceUser(username);
-        Optional<AivenPGDatabase> database = getDatabase(databaseName);
+    public Set<PGDatabaseAndUser> getUserAndDatabase(Optional<String> databaseAndUsername) {
 
-        if (serviceUser.isPresent() && database.isPresent()) {
-            return Collections.singleton(PGDatabaseAndUser
-                    .builder()
-                    .database(database.get().getDatabaseName())
-                    .username(serviceUser.get().getAivenPGServiceUser().getUsername())
-                    .password(serviceUser.get().getAivenPGServiceUser().getPassword())
-                    .build()
-            );
+        if (databaseAndUsername.isPresent()) {
+
+            Optional<AivenServiceUser> serviceUser = getServiceUser(databaseAndUsername.get());
+            Optional<AivenPGDatabase> database = getDatabase(databaseAndUsername.get());
+
+            if (serviceUser.isPresent() && database.isPresent()) {
+                return Collections.singleton(PGDatabaseAndUser
+                        .builder()
+                        .database(database.get().getDatabaseName())
+                        .username(serviceUser.get().getAivenPGServiceUser().getUsername())
+                        .password(serviceUser.get().getAivenPGServiceUser().getPassword())
+                        .build()
+                );
+            }
         }
 
         return Collections.emptySet();
