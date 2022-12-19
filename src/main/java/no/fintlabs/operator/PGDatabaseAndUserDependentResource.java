@@ -11,12 +11,14 @@ import org.springframework.stereotype.Component;
 import java.time.Duration;
 import java.util.Set;
 
+import static no.fintlabs.operator.CrdUtilities.getValueFromAnnotationByKey;
 import static no.fintlabs.operator.NameFactory.createDatabaseAndUserName;
 
 @Slf4j
 @Component
 public class PGDatabaseAndUserDependentResource extends FlaisExternalDependentResource<PGDatabaseAndUser, PGDatabaseAndUserCRD, PGDatabaseAndUserSpec> {
 
+    private static final String ANNOTATION_PG_DATABASE_NAME = "fintlabs.no/database-and-username";
     private final AivenService aivenService;
 
     public PGDatabaseAndUserDependentResource(PGDatabaseAndUserWorkflow workflow, AivenService aivenService) {
@@ -37,11 +39,11 @@ public class PGDatabaseAndUserDependentResource extends FlaisExternalDependentRe
                                 .build()
                 )
                 .orElseGet(() -> {
-                    String databaseName = createDatabaseAndUserName(primary);
-                    return PGDatabaseAndUser.builder()
-                                .database(databaseName)
-                                .username(databaseName)
-                                .build();
+                            String databaseName = createDatabaseAndUserName(primary);
+                            return PGDatabaseAndUser.builder()
+                                    .database(databaseName)
+                                    .username(databaseName)
+                                    .build();
                         }
                 );
 
@@ -66,13 +68,16 @@ public class PGDatabaseAndUserDependentResource extends FlaisExternalDependentRe
         aivenService.createUserForService(desired);
         aivenService.createConnectionPool(desired);
 
+        primary.getMetadata().getAnnotations().put(ANNOTATION_PG_DATABASE_NAME, desired.getDatabase());
+
+
         return desired;
     }
 
     @Override
     public Set<PGDatabaseAndUser> fetchResources(PGDatabaseAndUserCRD primaryResource) {
 
-        return aivenService.getUserAndDatabase("noop");
+        return aivenService.getUserAndDatabase(getValueFromAnnotationByKey(primaryResource, ANNOTATION_PG_DATABASE_NAME));
 
     }
 }
