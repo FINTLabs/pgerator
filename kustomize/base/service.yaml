@@ -2,14 +2,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: test-fint-pgerator
-  labels:
-    app.kubernetes.io/name: fint-pgerator
-    app.kubernetes.io/instance: pgerator
-    app.kubernetes.io/version: "latest"
-    app.kubernetes.io/managed-by: GA
-    app.kubernetes.io/component: operator
-    app.kubernetes.io/part-of: fintlabs-application-infrastructure-services
-    fintlabs.no/team: flais
 spec:
   type: ClusterIP
   ports:
@@ -17,6 +9,3 @@ spec:
       targetPort: http
       protocol: TCP
       name: http
-  selector:
-    app.kubernetes.io/name: fint-pgerator
-    app.kubernetes.io/instance: pgerator
