@@ -9,4 +9,4 @@ patches:
         value: "vaults/aks-beta-vault/items/pgerator"
     target:
       kind: OnePasswordItem
-      name: kafkarator
+      name: pgerator
