@@ -19,9 +19,8 @@ public class ConnectionPool {
     @JsonProperty("pool_name")
     private String poolName;
 
-    @Builder.Default
     @JsonProperty("pool_size")
-    private long poolSize = 10;
+    private long poolSize;
 
     private String username;
 }

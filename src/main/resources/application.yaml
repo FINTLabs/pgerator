@@ -13,6 +13,8 @@ fint:
     base-url: https://api.aiven.io/v1
     project: fintlabs
     service:
+    pg:
+      connection-pool-size: 2
 
 management:
   endpoints:
