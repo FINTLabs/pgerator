@@ -84,6 +84,6 @@ These are the following steps:
 
 ## Resources
 
-Docker login action https://github.com/marketplace/actions/docker-login
-Docker metadata action https://github.com/marketplace/actions/docker-metadata-action
-Azure CLI action https://github.com/marketplace/actions/azure-cli-action
+* Docker login action https://github.com/marketplace/actions/docker-login
+* Docker metadata action https://github.com/marketplace/actions/docker-metadata-action
+* Azure CLI action https://github.com/marketplace/actions/azure-cli-action
