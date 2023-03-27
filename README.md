@@ -61,29 +61,4 @@ You will need an authentication token from aiven.
 8. Also check that you find the instances created in aiven.
    * `Services -> pg-alpha -> Users` and `Services -> pg-alpha -> Databases`
 
-## Set up in the cluster
 
-To set te project up in a cluster we use Github Action to dockerize the application and kustomize to create the Kubernetes manifests.
-All of this work is done in `github/workflows/build-and-deploy.yaml`.
-These are the following steps:
-
-1. Set a name field that describe what the action script is going to do.
-2. Use on.push.branches to set which branch to listen to for the script to run. (Set this to "main" to make sure it's onnly running when you push changes to the main branch.)
-3. Create environment variables for your registry, image name, cluster name and cluster resource group.
-4. Set up jobs
-   1. build-and-push-image needs to be set up with ubuntu-latest and read/write permissions.
-   2. Steps
-      1. Checkout repository `actions/checkout@v3`
-      2. Log in to container registry `docker/login-action`
-      3. Extract metadata for Docker `docker/metadata-action`
-      4. Build and push docker image to the cluster `docker/build-push-action`
-      5. Bake manifest with kustomize `azure/k8s-bake@v2.2` with renderEngine
-      6. Set target cluster `azure/aks-set-context@v1` with creds, cluster-name and resource-group
-      7. Deploy `azure/k8s-deploy@v4.4` with manifests, images, namespace and action
-      8. To add more clusters repeat step e. to g.
-
-## Resources
-
-* Docker login action https://github.com/marketplace/actions/docker-login
-* Docker metadata action https://github.com/marketplace/actions/docker-metadata-action
-* Azure CLI action https://github.com/marketplace/actions/azure-cli-action
