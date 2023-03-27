@@ -34,4 +34,31 @@ metadata:
 ```
 
 # Installation
-TODO
+
+Below is an introduction on how to set up the project. First for local development in IntelliJ, then to the cluster.
+
+## Prerequisites
+You will need an authentication token from aiven.
+- Log in to https://console.azure.aiven.io/
+- Go to User Information (Human icon top right of the site)
+- Choose "authentication"
+- Choose "Generate token"
+- Give your token a name, e.g. Development
+- Copy and add the token to 1password so you don't loose track of it.
+
+## Local development
+
+1. Clone the repository: `git clone https://github.com/FINTLabs/pgerator.git`
+2. Create Run/Debug configuration `"Run -> Edit Configurations..."`
+3. Add the following three prerequisites (Name - Value): 
+    * fint.aiven.service - pg-alpha
+    * fint.aiven.token - generated in the steps mentioned in the prerequisites
+    * fint.data.pool-base-url -	jdbc:postgresql://\<aiven PgBouncer Host\> : \<aiven PgBouncer Port\>/
+4. Cd to the project root and build the Gradle project: `./gradlew clean build`
+5. Apply the custom-resource: `kubectl apply -f build/classes/java/main/META-INF/fabric8/pgdatabaseandusers.fintlabs.no-v1.yml`
+6. Run or debug the Application in IntelliJ.
+7. Check that it worked: `kubectl get secrets` and `kubectl get customresourcedefinitions`, you should see the name  you specified in the custom .yaml file in the list.
+8. Also check that you find the instances created in aiven.
+   * `Services -> pg-alpha -> Users` and `Services -> pg-alpha -> Databases`
+
+

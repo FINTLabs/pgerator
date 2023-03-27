@@ -2,6 +2,7 @@ package no.fintlabs.aiven;
 
 import lombok.extern.slf4j.Slf4j;
 import no.fintlabs.operator.PGDatabaseAndUser;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -19,6 +20,9 @@ public class AivenService {
 
     private final WebClient webClient;
     private final AivenProperties aivenProperties;
+
+    @Value("${fint.aiven.pg.connection-pool-size:2}")
+    private long connectionPoolSize;
 
 
     public AivenService(WebClient webClient, AivenProperties aivenProperties) {
@@ -142,6 +146,7 @@ public class AivenService {
                             .username(pgDatabaseAndUser.getUsername())
                             .database(pgDatabaseAndUser.getDatabase())
                             .poolName(pgDatabaseAndUser.getUsername())
+                            .poolSize(connectionPoolSize)
                             .build()))
                     .retrieve()
                     // TODO: 28/11/2022 Needs improvement
