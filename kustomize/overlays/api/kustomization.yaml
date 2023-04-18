@@ -1,6 +1,12 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-bases:
+resources:
   - ../../base
-patchesStrategicMerge:
-  - onepassword.yaml
+patches:
+  - patch: |-
+      - op: replace
+        path: "/spec/itemPath"
+        value: "vaults/aks-api-vault/items/pgerator"
+    target:
+      kind: OnePasswordItem
+      name: pgerator
