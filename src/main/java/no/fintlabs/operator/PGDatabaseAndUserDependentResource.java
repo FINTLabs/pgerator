@@ -5,7 +5,9 @@ import io.javaoperatorsdk.operator.api.reconciler.Context;
 import lombok.extern.slf4j.Slf4j;
 import no.fintlabs.FlaisExternalDependentResource;
 import no.fintlabs.aiven.AivenService;
+import no.fintlabs.aiven.FailedToCreateAivenObjectException;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -62,15 +64,40 @@ public class PGDatabaseAndUserDependentResource extends FlaisExternalDependentRe
     @Override
     public PGDatabaseAndUser create(PGDatabaseAndUser desired, PGDatabaseAndUserCRD primary, Context<PGDatabaseAndUserCRD> context) {
 
-        desired.setPassword(RandomStringUtils.randomAlphanumeric(32));
+        return context.getSecondaryResource(PGDatabaseAndUser.class)
+                .orElseGet(() -> {
+                    try {
+                        return createIfNoDatabaseAttached(desired, primary);
+                    } catch (FailedToCreateAivenObjectException e) {
+                        cleanupDatabaseResources(desired);
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
 
-        aivenService.createDatabaseForService(desired);
-        aivenService.createUserForService(desired);
-        aivenService.createConnectionPool(desired);
+    private void cleanupDatabaseResources(PGDatabaseAndUser desired) {
+        log.error("An error occured while creating the database {}. Trying to clean up resources...", desired.getDatabase());
+        log.info("Removing connection pool...");
+        aivenService.deleteConnectionPool(desired);
+        log.info("Removing db user...");
+        aivenService.deleteUserForService(desired.getUsername());
+        log.info("Removing database...");
+        aivenService.deleteDatabase(desired.getDatabase());
+    }
 
-        primary.getMetadata().getAnnotations().put(ANNOTATION_PG_DATABASE_NAME, desired.getDatabase());
+    private PGDatabaseAndUser createIfNoDatabaseAttached(PGDatabaseAndUser desired, PGDatabaseAndUserCRD primary) throws FailedToCreateAivenObjectException {
+        if (StringUtils.isEmpty(primary.getMetadata().getAnnotations().get(ANNOTATION_PG_DATABASE_NAME))) {
+            log.info("No database attached to CRD. Creating database in Aiven");
+            desired.setPassword(RandomStringUtils.randomAlphanumeric(32));
+            aivenService.createDatabaseForService(desired);
+            aivenService.createUserForService(desired);
+            aivenService.createConnectionPool(desired);
 
+            primary.getMetadata().getAnnotations().put(ANNOTATION_PG_DATABASE_NAME, desired.getDatabase());
 
+        } else {
+            log.info("Database {} is attached to CRD. Skipping creating", primary.getMetadata().getAnnotations().get(ANNOTATION_PG_DATABASE_NAME));
+        }
         return desired;
     }
 

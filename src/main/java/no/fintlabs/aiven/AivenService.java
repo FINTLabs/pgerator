@@ -1,6 +1,7 @@
 package no.fintlabs.aiven;
 
 import lombok.extern.slf4j.Slf4j;
+import no.fintlabs.aiven.model.AivenPGService;
 import no.fintlabs.operator.PGDatabaseAndUser;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -30,7 +31,7 @@ public class AivenService {
         this.aivenProperties = aivenProperties;
     }
 
-    public void createDatabaseForService(PGDatabaseAndUser desired) {
+    public void createDatabaseForService(PGDatabaseAndUser desired) throws FailedToCreateAivenObjectException {
 
         try {
             webClient.post()
@@ -42,6 +43,7 @@ public class AivenService {
                     .block();
         } catch (WebClientResponseException e) {
             log.debug("Creating Aiven service db returned error code {} and body {}", e.getStatusText(), e.getResponseBodyAsString());
+            throw new FailedToCreateAivenObjectException();
         }
     }
 
@@ -63,7 +65,20 @@ public class AivenService {
         }
     }
 
-    public void createUserForService(PGDatabaseAndUser desired) {
+    public void deleteDatabase(String database) {
+
+        try {
+             webClient.delete()
+                            .uri("/project/{project_name}/service/{service_name}/db/{dbname}", aivenProperties.getProject(), aivenProperties.getService(), database)
+                            .retrieve()
+                            .toBodilessEntity()
+                            .block();
+        } catch (WebClientResponseException e) {
+            log.debug("Deleting PG database {} returned error code {} and body {}", database, e.getStatusText(), e.getResponseBodyAsString());
+        }
+    }
+
+    public void createUserForService(PGDatabaseAndUser desired) throws FailedToCreateAivenObjectException {
 
         try {
             AivenServiceUser aivenServiceUser = getServiceUser(desired.getUsername()).orElseGet(() -> {
@@ -78,9 +93,10 @@ public class AivenService {
             });
 
 
-            desired.setPassword(aivenServiceUser.getAivenPGServiceUser().getPassword());
+            desired.setPassword(Objects.requireNonNull(aivenServiceUser).getAivenPGServiceUser().getPassword());
         } catch (WebClientResponseException e) {
             log.debug("Creating Aiven service user returned error code {} and body {}", e.getStatusText(), e.getResponseBodyAsString());
+            throw new FailedToCreateAivenObjectException();
         }
     }
 
@@ -134,7 +150,7 @@ public class AivenService {
         }
     }
 
-    public void createConnectionPool(PGDatabaseAndUser pgDatabaseAndUser) {
+    public void createConnectionPool(PGDatabaseAndUser pgDatabaseAndUser) throws FailedToCreateAivenObjectException {
         log.debug("Creating connection pool for user '{}' ", pgDatabaseAndUser.getUsername());
 
         try {
@@ -153,9 +169,10 @@ public class AivenService {
                     .onStatus(httpStatus -> httpStatus.value() == 409, clientResponse -> Mono.empty())
                     .bodyToMono(CreateConnectionPoolRepsonse.class)
                     .block();
-            log.debug("Creating connection pool response: {}", block.getMessage());
+            log.debug("Creating connection pool response: {}", Objects.requireNonNull(block).getMessage());
         } catch (WebClientResponseException e) {
             log.debug("Creating connection pool returned error code {} and body {}", e.getStatusCode(), e.getResponseBodyAsString());
+            throw new FailedToCreateAivenObjectException();
         }
     }
 
@@ -168,6 +185,23 @@ public class AivenService {
                 .retrieve()
                 .bodyToMono(Void.class)
                 .block();
+    }
+
+    public Optional<AivenPGService> getAivenService() {
+        try {
+            AivenPGService aivenPGService = webClient.get()
+                    .uri("/project/{project_name}/service/{service_name}", aivenProperties.getProject(), aivenProperties.getService())
+                    .retrieve()
+                    .bodyToMono(AivenPGService.class)
+                    .block();
+
+            return Optional.ofNullable(aivenPGService);
+
+
+        } catch (WebClientResponseException e) {
+            log.debug("Could not Aiven PG service '{}'. Proceeding to create...", aivenProperties.getService());
+            return Optional.empty();
+        }
     }
 
 

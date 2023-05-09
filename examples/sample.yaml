@@ -1,13 +1,13 @@
 apiVersion: "fintlabs.no/v1alpha1"
 kind: PGDatabaseAndUser
 metadata:
-  name: fint-betaling-backend
+  name: fint-test-backend
   labels:
-    app.kubernetes.io/name: fint-betaling-backend
-    app.kubernetes.io/instance: fint-betaling-backend_rogfk-no
+    app.kubernetes.io/name: fint-test-backend
+    app.kubernetes.io/instance: fint-test-backend_rogfk-no
     app.kubernetes.io/version: latest
     app.kubernetes.io/component: backend
-    app.kubernetes.io/part-of: fint-betaling
+    app.kubernetes.io/part-of: fint-test
     fintlabs.no/team: core
     fintlabs.no/org-id: rogfk.no
 
