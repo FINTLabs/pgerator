@@ -6,7 +6,7 @@ import static no.fintlabs.operator.NameFactory.createUsername
 
 class NameFactorySpec extends Specification {
 
-    def "Name should end with a 6 charater random string"() {
+    def "Name should end with a 7 charater random string"() {
         given:
         def crd = new PGUserCRD()
         crd.getMetadata().getLabels().put("fintlabs.no/org-id", "flais.io")
@@ -18,7 +18,7 @@ class NameFactorySpec extends Specification {
 
         then:
         name
-        split[2].length() == 6
+        split[2].length() == 7
     }
 
     def "Name should contain orgId and team name"() {

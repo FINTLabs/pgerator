@@ -6,10 +6,10 @@ public class NameFactory {
 
     public static String createUsername(PGUserCRD crd) {
         String name = String.format(
-                "%s_%s_%s_next",
+                "%s_%s_%s",
                 crd.getMetadata().getLabels().get("fintlabs.no/org-id").replaceAll("\\.", "-"),
                 crd.getMetadata().getLabels().get("fintlabs.no/team"),
-                RandomStringUtils.randomAlphabetic(6)
+                RandomStringUtils.randomAlphabetic(7)
         );
 
         if (name.length() > 40) {
