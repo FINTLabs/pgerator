@@ -1,5 +1,5 @@
 apiVersion: "fintlabs.no/v1alpha1"
-kind: PGDatabaseAndUser
+kind: PGUser
 metadata:
   name: fint-test-backend
   labels:
@@ -10,4 +10,6 @@ metadata:
     app.kubernetes.io/part-of: fint-test
     fintlabs.no/team: core
     fintlabs.no/org-id: rogfk.no
+spec:
+  database: flais
 

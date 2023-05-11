@@ -17,11 +17,11 @@ import java.util.HashMap;
 
 @Component
 @Slf4j
-public class PGDatabaseAndUserSecretDependentResource extends FlaisKubernetesDependentResource<Secret, PGDatabaseAndUserCRD, PGDatabaseAndUserSpec> {
+public class PGUserSecretDependentResource extends FlaisKubernetesDependentResource<Secret, PGUserCRD, PGUserSpec> {
 
     private final OperatorProperties properties;
 
-    public PGDatabaseAndUserSecretDependentResource(FlaisWorkflow<PGDatabaseAndUserCRD, PGDatabaseAndUserSpec> workflow, KubernetesClient kubernetesClient, PGDatabaseAndUserDependentResource dependentResource, OperatorProperties properties) {
+    public PGUserSecretDependentResource(FlaisWorkflow<PGUserCRD, PGUserSpec> workflow, KubernetesClient kubernetesClient, PGUserDependentResource dependentResource, OperatorProperties properties) {
         super(Secret.class, workflow, kubernetesClient);
         this.properties = properties;
         dependsOn(dependentResource);
@@ -32,19 +32,19 @@ public class PGDatabaseAndUserSecretDependentResource extends FlaisKubernetesDep
     }
 
     @Override
-    public Matcher.Result<Secret> match(Secret actualResource, PGDatabaseAndUserCRD primary, Context<PGDatabaseAndUserCRD> context) {
+    public Matcher.Result<Secret> match(Secret actualResource, PGUserCRD primary, Context<PGUserCRD> context) {
         return super.match(actualResource, primary, context);
     }
 
     @Override
-    protected Secret desired(PGDatabaseAndUserCRD primary, Context<PGDatabaseAndUserCRD> context) {
+    protected Secret desired(PGUserCRD primary, Context<PGUserCRD> context) {
         log.debug("Desired secret for {}", primary.getMetadata().getName());
 
         return generateSecret(primary, context);
     }
 
-    private Secret generateSecret(PGDatabaseAndUserCRD primary, Context<PGDatabaseAndUserCRD> context) {
-        PGDatabaseAndUser pgDatabaseAndUser = context.getSecondaryResource(PGDatabaseAndUser.class).orElseThrow();
+    private Secret generateSecret(PGUserCRD primary, Context<PGUserCRD> context) {
+        PGUser pgUser = context.getSecondaryResource(PGUser.class).orElseThrow();
         HashMap<String, String> labels = new HashMap<>(primary.getMetadata().getLabels());
         labels.put("app.kubernetes.io/managed-by", "pgerator");
 
@@ -54,10 +54,10 @@ public class PGDatabaseAndUserSecretDependentResource extends FlaisKubernetesDep
                 .withLabels(labels)
                 .endMetadata()
                 .withType("Opaque")
-                .addToData("fint.database.username", encode(pgDatabaseAndUser.getUsername()))
-                .addToData("fint.database.password", encode(pgDatabaseAndUser.getPassword()))
+                .addToData("fint.database.username", encode(pgUser.getUsername()))
+                .addToData("fint.database.password", encode(pgUser.getPassword()))
                 .addToData("fint.database.url", encode(properties.getPoolBaseUrl()
-                        + pgDatabaseAndUser.getDatabase()
+                        + pgUser.getDatabase()
                         + "?sslmode=require&prepareThreshold=0"))
                 .build();
     }
