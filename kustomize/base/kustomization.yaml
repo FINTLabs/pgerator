@@ -8,7 +8,7 @@ resources:
   - onepassword.yaml
   - serviceaccount.yaml
   - rolebinding.yaml
-  - pgdatabaseandusers.fintlabs.no-v1.yml
+  - pgusers.fintlabs.no-v1.yml
 commonLabels:
   app.kubernetes.io/name: pgerator
   app.kubernetes.io/instance: flais-pgerator
