@@ -51,7 +51,7 @@ tasks.named('test') {
 }
 
 tasks.register('copyResourceDefinition', Copy) {
-    from "$buildDir/classes/java/main/META-INF/fabric8/pgdatabaseandusers.fintlabs.no-v1.yml"
+    from "$buildDir/classes/java/main/META-INF/fabric8/pgusers.fintlabs.no-v1.yml"
     into "$projectDir/kustomize/base"
 }
 
@@ -59,6 +59,6 @@ tasks.named("build") { finalizedBy("copyResourceDefinition") }
 
 tasks.named("clean") {
     doLast {
-        project.delete("$projectDir/kustomize/base/pgdatabaseandusers.fintlabs.no-v1.yml")
+        project.delete("$projectDir/kustomize/base/pgusers.fintlabs.no-v1.yml")
     }
 }

@@ -4,9 +4,9 @@ import org.apache.commons.lang3.RandomStringUtils;
 
 public class NameFactory {
 
-    public static String createDatabaseAndUserName(PGDatabaseAndUserCRD crd) {
+    public static String createUsername(PGUserCRD crd) {
         String name = String.format(
-                "%s_%s_%s",
+                "%s_%s_%s_next",
                 crd.getMetadata().getLabels().get("fintlabs.no/org-id").replaceAll("\\.", "-"),
                 crd.getMetadata().getLabels().get("fintlabs.no/team"),
                 RandomStringUtils.randomAlphabetic(6)

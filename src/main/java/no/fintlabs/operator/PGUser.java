@@ -7,7 +7,7 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PGDatabaseAndUser {
+public class PGUser {
     private String database;
     private String username;
     private String password;
