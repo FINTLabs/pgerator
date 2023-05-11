@@ -19,7 +19,7 @@ public class AivenServiceValidation {
     private final AivenService aivenService;
     private final MetricService metricService;
 
-    @Value("${fint.aiven.pg.max-connection-pools:45}")
+    @Value("${fint.aiven.pg.max-connection-pools:50}")
     private int maxConnectionPools;
 
 

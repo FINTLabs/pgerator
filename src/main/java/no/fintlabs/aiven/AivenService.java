@@ -22,7 +22,7 @@ public class AivenService {
     private final WebClient webClient;
     private final AivenProperties aivenProperties;
 
-    @Value("${fint.aiven.pg.connection-pool-size:2}")
+    @Value("${fint.aiven.pg.connection-pool-size:1}")
     private long connectionPoolSize;
 
 
