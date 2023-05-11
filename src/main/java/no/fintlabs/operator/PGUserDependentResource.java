@@ -6,8 +6,10 @@ import lombok.extern.slf4j.Slf4j;
 import no.fintlabs.FlaisExternalDependentResource;
 import no.fintlabs.aiven.AivenService;
 import no.fintlabs.aiven.FailedToCreateAivenObjectException;
+import no.fintlabs.pg.PgService;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -21,10 +23,12 @@ public class PGUserDependentResource extends FlaisExternalDependentResource<PGUs
 
     public static final String ANNOTATION_PG_DATABASE_NAME = "fintlabs.no/database-username";
     private final AivenService aivenService;
+    private final PgService pgService;
 
-    public PGUserDependentResource(PGUserWorkflow workflow, AivenService aivenService) {
+    public PGUserDependentResource(PGUserWorkflow workflow, AivenService aivenService, PgService pgService) {
         super(PGUser.class, workflow);
         this.aivenService = aivenService;
+        this.pgService = pgService;
         setPollingPeriod(Duration.ofMinutes(10).toMillis());
     }
 
@@ -54,7 +58,10 @@ public class PGUserDependentResource extends FlaisExternalDependentResource<PGUs
     @Override
     public void delete(PGUserCRD primary, Context<PGUserCRD> context) {
         context.getSecondaryResource(PGUser.class)
-                .ifPresent(pgUser -> aivenService.deleteUserForService(pgUser.getUsername()));
+                .ifPresent(pgUser -> {
+                    aivenService.deleteUserForService(pgUser.getUsername());
+                    pgService.deleteSchema(pgUser.getDatabase(), pgUser.getUsername());
+                });
     }
 
     @Override
@@ -63,8 +70,15 @@ public class PGUserDependentResource extends FlaisExternalDependentResource<PGUs
         return context.getSecondaryResource(PGUser.class)
                 .orElseGet(() -> {
                     try {
-                        return createUser(desired, primary);
-                    } catch (FailedToCreateAivenObjectException e) {
+                        PGUser user = createUser(desired, primary);
+                        pgService.createSchema(user.getDatabase(), user.getUsername());
+                        pgService.grantUsageAndCreateOnSchema(user.getDatabase(), user.getUsername());
+
+                        return user;
+
+                    } catch (FailedToCreateAivenObjectException | DataAccessException e) {
+                        aivenService.deleteUserForService(desired.getUsername());
+                        pgService.deleteSchema(desired.getDatabase(), desired.getUsername());
                         throw new RuntimeException(e);
                     }
                 });

@@ -1,15 +1,15 @@
 apiVersion: "fintlabs.no/v1alpha1"
 kind: PGUser
 metadata:
-  name: fint-test-backend
+  name: pg-test-user
   labels:
-    app.kubernetes.io/name: fint-test-backend
-    app.kubernetes.io/instance: fint-test-backend_rogfk-no
+    app.kubernetes.io/name: pg-test-user
+    app.kubernetes.io/instance: pg-test-user_flais-io
     app.kubernetes.io/version: latest
     app.kubernetes.io/component: backend
-    app.kubernetes.io/part-of: fint-test
-    fintlabs.no/team: core
-    fintlabs.no/org-id: rogfk.no
+    app.kubernetes.io/part-of: test
+    fintlabs.no/team: flais
+    fintlabs.no/org-id: flais.io
 spec:
-  database: flais
+  database: fint-core
 
