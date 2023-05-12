@@ -18,7 +18,7 @@ class NameFactorySpec extends Specification {
 
         then:
         name
-        split[2].length() == 7
+        split[3].length() == 7
     }
 
     def "Name should contain orgId and team name"() {
@@ -33,8 +33,9 @@ class NameFactorySpec extends Specification {
 
         then:
         name
-        split[0] == "flais-io"
-        split[1] == "flais"
+        split[0] == "flais"
+        split[1] == "io"
+        split[2] == "flais"
 
     }
 
