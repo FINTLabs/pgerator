@@ -7,7 +7,7 @@ public class NameFactory {
     public static String createUsername(PGUserCRD crd) {
         String name = String.format(
                 "%s_%s_%s",
-                crd.getMetadata().getLabels().get("fintlabs.no/org-id").replaceAll("\\.", "-"),
+                crd.getMetadata().getLabels().get("fintlabs.no/org-id").replaceAll("\\.", "_"),
                 crd.getMetadata().getLabels().get("fintlabs.no/team"),
                 RandomStringUtils.randomAlphabetic(7)
         );
@@ -16,7 +16,7 @@ public class NameFactory {
             throw new IllegalArgumentException("Database name to long. It can be max 40 characters.");
         }
 
-        return name;
+        return name.toLowerCase();
     }
 
 
