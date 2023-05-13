@@ -7,8 +7,6 @@ import no.fintlabs.FlaisExternalDependentResource;
 import no.fintlabs.aiven.AivenService;
 import no.fintlabs.aiven.FailedToCreateAivenObjectException;
 import no.fintlabs.pg.PgService;
-import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Component;
 
@@ -70,11 +68,13 @@ public class PGUserDependentResource extends FlaisExternalDependentResource<PGUs
         return context.getSecondaryResource(PGUser.class)
                 .orElseGet(() -> {
                     try {
-                        PGUser user = createUser(desired, primary);
-                        pgService.createSchema(user.getDatabase(), user.getUsername());
-                        pgService.grantUsageAndCreateOnSchema(user.getDatabase(), user.getUsername());
+                        //PGUser user = createUser(desired, primary);
 
-                        return user;
+                        aivenService.createUserForService(desired);
+                        pgService.createSchema(desired.getDatabase(), desired.getUsername());
+                        pgService.grantUsageAndCreateOnSchema(desired.getDatabase(), desired.getUsername());
+
+                        return desired;
 
                     } catch (FailedToCreateAivenObjectException | DataAccessException e) {
                         aivenService.deleteUserForService(desired.getUsername());
@@ -84,19 +84,12 @@ public class PGUserDependentResource extends FlaisExternalDependentResource<PGUs
                 });
     }
 
-    private PGUser createUser(PGUser desired, PGUserCRD primary) throws FailedToCreateAivenObjectException {
-        if (StringUtils.isEmpty(primary.getMetadata().getAnnotations().get(ANNOTATION_PG_DATABASE_NAME))) {
-            log.info("No user attached to CRD. Creating database in Aiven");
-            desired.setPassword(RandomStringUtils.randomAlphanumeric(32));
-            aivenService.createUserForService(desired);
-
-            primary.getMetadata().getAnnotations().put(ANNOTATION_PG_DATABASE_NAME, desired.getUsername());
-
-        } else {
-            log.info("Database {} is attached to CRD. Skipping creating", primary.getMetadata().getAnnotations().get(ANNOTATION_PG_DATABASE_NAME));
-        }
-        return desired;
-    }
+//    private PGUser createUser(PGUser desired, PGUserCRD primary) throws FailedToCreateAivenObjectException {
+//        //desired.setPassword(RandomStringUtils.randomAlphanumeric(32));
+//        aivenService.createUserForService(desired);
+//
+//        return desired;
+//    }
 
     @Override
     public Set<PGUser> fetchResources(PGUserCRD primaryResource) {

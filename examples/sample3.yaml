@@ -1,0 +1,14 @@
+apiVersion: "fintlabs.no/v1alpha1"
+kind: PGUser
+metadata:
+  name: dette-navnet-blir-lengre-enn-64-tegn-som-det-absolutt-ikke-skal-bli
+  labels:
+    app.kubernetes.io/name: pg-test-user2
+    app.kubernetes.io/instance: pg-test-user2_flais-io
+    app.kubernetes.io/version: latest
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/part-of: test
+    fintlabs.no/team: flais
+    fintlabs.no/org-id: flais.io
+spec:
+  database: fint-kontroll
