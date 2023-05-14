@@ -58,7 +58,8 @@ public class PGUserSecretDependentResource extends FlaisKubernetesDependentResou
                 .addToData("fint.database.password", encode(pgUser.getPassword()))
                 .addToData("fint.database.url", encode(properties.getPoolBaseUrl()
                         + pgUser.getDatabase()
-                        + "?sslmode=require&prepareThreshold=0"))
+                        + "?sslmode=require&prepareThreshold=0&ApplicationName="
+                        + pgUser.getDatabase()))
                 .build();
     }
 
