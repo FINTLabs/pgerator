@@ -4,12 +4,12 @@ metadata:
   name: pg-test-user
   labels:
     app.kubernetes.io/name: pg-test-user
-    app.kubernetes.io/instance: pg-test-user_flais-io
+    app.kubernetes.io/instance: pg-test-user_fintlabs-no
     app.kubernetes.io/version: latest
     app.kubernetes.io/component: backend
     app.kubernetes.io/part-of: test
-    fintlabs.no/team: flais
-    fintlabs.no/org-id: flais.io
+    fintlabs.no/team: core
+    fintlabs.no/org-id: fintlabs.no
 spec:
   database: fint-core
 
