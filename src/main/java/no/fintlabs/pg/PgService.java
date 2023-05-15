@@ -30,9 +30,11 @@ public class PgService {
     }
 
     public void deleteSchema(String dbName, String username) throws DataAccessException {
-        changeDatabase(dbName);
-        jdbcTemplate.execute(String.format("DROP SCHEMA %s CASCADE", username));
-        log.info("Schema deleted: " + username);
+        synchronized (jdbcTemplate) {
+            changeDatabase(dbName);
+            jdbcTemplate.execute(String.format("DROP SCHEMA %s CASCADE", username));
+            log.info("Schema {} deleted on database {}", username, currentDatabase);
+        }
     }
 
     private void changeDatabase(String databaseName) {
@@ -44,22 +46,31 @@ public class PgService {
                     .build();
             jdbcTemplate.setDataSource(dataSource);
             currentDatabase = databaseName;
-            log.info("Database changed to: " + databaseName);
+            log.info("Database changed to {}", databaseName);
+        } else {
+            log.info("Database unchanged {}", currentDatabase);
         }
     }
 
     public void createSchema(String databaseName, String username) throws DataAccessException {
-        changeDatabase(databaseName);
-        jdbcTemplate.execute(String.format("CREATE SCHEMA IF NOT EXISTS %s", username));
-        log.info("Schema created: " + username);
+        synchronized (jdbcTemplate) {
+            changeDatabase(databaseName);
+            jdbcTemplate.execute(String.format("CREATE SCHEMA IF NOT EXISTS %s", username));
+            log.info("Schema {} created on {}", username, currentDatabase);
+        }
     }
 
 
     public void grantUsageAndCreateOnSchema(String databaseName, String username) throws DataAccessException {
-        changeDatabase(databaseName);
 
-        jdbcTemplate.execute(String.format("grant usage on schema %s to %s", username, username));
-        jdbcTemplate.execute(String.format("grant create on schema %s to %s", username, username));
-        log.info("Usage and create granted on schema {} for user {}", username, username);
+        synchronized (jdbcTemplate) {
+            changeDatabase(databaseName);
+            jdbcTemplate.execute(String.format("grant usage on schema %s to %s", username, username));
+            jdbcTemplate.execute(String.format("grant create on schema %s to %s", username, username));
+            log.info("Usage and create granted on schema {} for user {} on database {}",
+                    username,
+                    username,
+                    currentDatabase);
+        }
     }
 }
