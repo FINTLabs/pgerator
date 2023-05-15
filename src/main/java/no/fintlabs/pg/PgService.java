@@ -52,22 +52,22 @@ public class PgService {
         }
     }
 
-    public void createSchema(String databaseName, String username) throws DataAccessException {
+    public void ensureSchema(String databaseName, String username) throws DataAccessException {
         synchronized (jdbcTemplate) {
             changeDatabase(databaseName);
             jdbcTemplate.execute(String.format("CREATE SCHEMA IF NOT EXISTS %s", username));
-            log.info("Schema {} created on {}", username, currentDatabase);
+            log.info("Ensure schema {} on {}", username, currentDatabase);
         }
     }
 
 
-    public void grantUsageAndCreateOnSchema(String databaseName, String username) throws DataAccessException {
+    public void ensureUsageAndCreateOnSchema(String databaseName, String username) throws DataAccessException {
 
         synchronized (jdbcTemplate) {
             changeDatabase(databaseName);
             jdbcTemplate.execute(String.format("grant usage on schema %s to %s", username, username));
             jdbcTemplate.execute(String.format("grant create on schema %s to %s", username, username));
-            log.info("Usage and create granted on schema {} for user {} on database {}",
+            log.info("Ensure usage and create grant on schema {} for user {} on database {}",
                     username,
                     username,
                     currentDatabase);

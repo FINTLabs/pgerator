@@ -71,8 +71,8 @@ public class PGUserDependentResource extends FlaisExternalDependentResource<PGUs
                         //PGUser user = createUser(desired, primary);
 
                         aivenService.createUserForService(desired);
-                        pgService.createSchema(desired.getDatabase(), desired.getUsername());
-                        pgService.grantUsageAndCreateOnSchema(desired.getDatabase(), desired.getUsername());
+                        pgService.ensureSchema(desired.getDatabase(), desired.getUsername());
+                        pgService.ensureUsageAndCreateOnSchema(desired.getDatabase(), desired.getUsername());
 
                         return desired;
 
