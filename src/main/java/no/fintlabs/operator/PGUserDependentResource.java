@@ -58,7 +58,7 @@ public class PGUserDependentResource extends FlaisExternalDependentResource<PGUs
         context.getSecondaryResource(PGUser.class)
                 .ifPresent(pgUser -> {
                     aivenService.deleteUserForService(pgUser.getUsername());
-                    pgService.deleteSchema(pgUser.getDatabase(), pgUser.getUsername());
+                    //pgService.deleteSchema(pgUser.getDatabase(), pgUser.getUsername());
                 });
     }
 
