@@ -65,9 +65,9 @@ public class PgService {
 
         synchronized (jdbcTemplate) {
             changeDatabase(databaseName);
-            jdbcTemplate.execute(String.format("grant usage on schema %s to %s", username, username));
-            jdbcTemplate.execute(String.format("grant create on schema %s to %s", username, username));
-            log.info("Ensure usage and create grant on schema {} for user {} on database {}",
+            jdbcTemplate.execute(String.format("grant all privileges on all tables in schema %s to %s", username, username));
+            jdbcTemplate.execute(String.format("grant all privileges on all sequences in schema %s to %s", username, username));
+            log.info("Ensure grant all privileges on schema {} for user {} on database {}",
                     username,
                     username,
                     currentDatabase);
