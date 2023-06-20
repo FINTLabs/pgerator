@@ -23,6 +23,8 @@ spec:
           env:
             - name: logging.level.no.fintlabs
               value: DEBUG
+            - name: JAVA_TOOL_OPTIONS
+              value: "-XX:+ExitOnOutOfMemoryError -Xmx512m -verbose:gc"
           envFrom:
             - secretRef:
                 name: pgerator
@@ -40,8 +42,8 @@ spec:
           #     port: http
           resources:
             limits:
-              memory: 512Mi
+              memory: 1Gi
               cpu: 500m
             requests:
-              memory: 256Mi
+              memory: 512Mi
               cpu: 250m
