@@ -67,6 +67,12 @@ public class PGUserDependentResource extends FlaisExternalDependentResource<PGUs
 
         return context.getSecondaryResource(PGUser.class)
                 .orElseGet(() -> {
+
+                    if (aivenService.getServiceUser(desired.getUsername()).isPresent()) {
+                        log.warn("Serviceuser already exists {}", desired.getUsername());
+                        throw new IllegalStateException("Serviceuser already exists " + desired.getUsername());
+                    }
+
                     try {
                         //PGUser user = createUser(desired, primary);
 
@@ -78,7 +84,7 @@ public class PGUserDependentResource extends FlaisExternalDependentResource<PGUs
 
                     } catch (FailedToCreateAivenObjectException | DataAccessException e) {
                         aivenService.deleteUserForService(desired.getUsername());
-                        pgService.deleteSchema(desired.getDatabase(), desired.getUsername());
+                        // pgService.deleteSchema(desired.getDatabase(), desired.getUsername());
                         throw new RuntimeException(e);
                     }
                 });
