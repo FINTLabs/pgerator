@@ -24,7 +24,7 @@ spec:
             - name: logging.level.no.fintlabs
               value: DEBUG
             - name: JAVA_TOOL_OPTIONS
-              value: "-XX:+ExitOnOutOfMemoryError -Xmx512m -verbose:gc"
+              value: "-XX:+ExitOnOutOfMemoryError -Xmx512m"
           envFrom:
             - secretRef:
                 name: pgerator
