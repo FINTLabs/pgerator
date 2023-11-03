@@ -1,6 +1,7 @@
 package no.fintlabs.aiven;
 
 import lombok.extern.slf4j.Slf4j;
+import no.fintlabs.operator.NameFactory;
 import no.fintlabs.operator.PGUser;
 import no.fintlabs.operator.PGUserCRD;
 import org.springframework.stereotype.Component;
@@ -66,23 +67,28 @@ public class AivenService {
 
     public Set<PGUser> getPgUser(PGUserCRD primary) {
 
-        Optional<String> databaseAndUsername = getValueFromAnnotationByKey(primary, ANNOTATION_PG_DATABASE_NAME);
+//        Optional<String> databaseAndUsername = getValueFromAnnotationByKey(primary, ANNOTATION_PG_DATABASE_NAME);
+//        log.warn("Content of database and username: " + databaseAndUsername.toString());
 
-        if (databaseAndUsername.isPresent()) {
+        String username = NameFactory.createUsername(primary);
+        log.debug("Username: " + username);
 
-            Optional<AivenServiceUser> serviceUser = getServiceUser(databaseAndUsername.get());
 
-            if (serviceUser.isPresent()) {
-                return Collections.singleton(PGUser
-                        .builder()
-                        .database(primary.getSpec().getDatabase())
-                        .username(serviceUser.get().getAivenPGServiceUser().getUsername())
-                        .password(serviceUser.get().getAivenPGServiceUser().getPassword())
-                        .build()
-                );
-            }
+        Optional<AivenServiceUser> serviceUser = getServiceUser(username);
+
+        if (serviceUser.isPresent()) {
+            log.debug("Found service user");
+
+            return Collections.singleton(PGUser
+                    .builder()
+                    .database(primary.getSpec().getDatabase())
+                    .username(serviceUser.get().getAivenPGServiceUser().getUsername())
+                    .password(serviceUser.get().getAivenPGServiceUser().getPassword())
+                    .build()
+            );
         }
 
+        log.debug("Did not find service user");
         return Collections.emptySet();
     }
 

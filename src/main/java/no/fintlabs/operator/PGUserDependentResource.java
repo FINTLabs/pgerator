@@ -101,7 +101,6 @@ public class PGUserDependentResource extends FlaisExternalDependentResource<PGUs
     public Set<PGUser> fetchResources(PGUserCRD primaryResource) {
 
         return aivenService.getPgUser(primaryResource);
-
     }
 }
 
