@@ -15,9 +15,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-import static no.fintlabs.operator.CrdUtilities.getValueFromAnnotationByKey;
-import static no.fintlabs.operator.PGUserDependentResource.ANNOTATION_PG_DATABASE_NAME;
-
 @Slf4j
 @Component
 public class AivenService {
@@ -67,17 +64,11 @@ public class AivenService {
 
     public Set<PGUser> getPgUser(PGUserCRD primary) {
 
-//        Optional<String> databaseAndUsername = getValueFromAnnotationByKey(primary, ANNOTATION_PG_DATABASE_NAME);
-//        log.warn("Content of database and username: " + databaseAndUsername.toString());
-
         String username = NameFactory.createUsername(primary);
-        log.debug("Username: " + username);
-
-
         Optional<AivenServiceUser> serviceUser = getServiceUser(username);
 
         if (serviceUser.isPresent()) {
-            log.debug("Found service user");
+            log.debug("Found service user " + username);
 
             return Collections.singleton(PGUser
                     .builder()
@@ -88,7 +79,7 @@ public class AivenService {
             );
         }
 
-        log.debug("Did not find service user");
+        log.debug("Did not find service user: " + username);
         return Collections.emptySet();
     }
 
