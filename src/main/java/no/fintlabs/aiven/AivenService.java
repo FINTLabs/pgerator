@@ -95,8 +95,8 @@ public class AivenService {
 
 
         } catch (WebClientResponseException e) {
-            log.debug("Could not find  user '{}'. Proceeding to create...", username);
-            return Optional.empty();
+            log.error("Failed to get user from Aiven: " + username, e);
+            throw e;
         }
     }
 }
