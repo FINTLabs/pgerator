@@ -85,14 +85,13 @@ public class AivenService {
 
     public Optional<AivenServiceUser> getServiceUser(String username) {
         try {
-            AivenServiceUser createKafkaUserResponse = webClient.get()
+            AivenServiceUser aivenServiceUserResponse = webClient.get()
                     .uri("/project/{project_name}/service/{service_name}/user/{username}", aivenProperties.getProject(), aivenProperties.getService(), username)
                     .retrieve()
                     .bodyToMono(AivenServiceUser.class)
                     .block();
 
-            return Optional.ofNullable(createKafkaUserResponse);
-
+            return Optional.ofNullable(aivenServiceUserResponse);
 
         } catch (WebClientResponseException e) {
             log.error("Failed to get user from Aiven: " + username, e);
