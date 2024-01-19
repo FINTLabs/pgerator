@@ -94,6 +94,11 @@ public class AivenService {
             return Optional.ofNullable(aivenServiceUserResponse);
 
         } catch (WebClientResponseException e) {
+            if (e.getStatusCode() == org.springframework.http.HttpStatus.NOT_FOUND) {
+                log.info("Service user not found: " + username);
+                return Optional.empty();
+            }
+
             log.error("Failed to get user from Aiven: " + username, e);
             throw e;
         }
