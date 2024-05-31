@@ -1,9 +1,9 @@
 package no.fintlabs.operator;
 
-import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.javaoperatorsdk.operator.api.reconciler.Context;
+import io.javaoperatorsdk.operator.processing.dependent.Matcher;
 import no.fintlabs.FlaisWorkflow;
 import no.fintlabs.OperatorProperties;
 import no.fintlabs.aiven.AivenService;
@@ -15,8 +15,7 @@ import java.lang.reflect.Method;
 import java.util.Base64;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -86,6 +85,22 @@ class PGUserSecretDependentResourceTest {
         assertEquals("testUser", decodedUsernameString);
         assertEquals("testPassword", decodedPasswordString);
         assertEquals("testUrltestDatabase?sslmode=require&prepareThreshold=0&ApplicationName=testUser", decodedUrlString);
+    }
+
+    @Test
+    public void testEncode() {
+        String value = "test string";
+        String encodedValue = Base64.getEncoder().encodeToString(value.getBytes());
+        String hardCodedValue = "dGVzdCBzdHJpbmc=";
+        assertEquals(encodedValue, hardCodedValue);
+    }
+
+    @Test
+    public void testDecode() {
+        String value = "dGVzdCBzdHJpbmc=";
+        String decodedValue = new String(Base64.getDecoder().decode(value));
+        String hardCodedValue = "test string";
+        assertEquals(decodedValue, hardCodedValue);
     }
 
 }
