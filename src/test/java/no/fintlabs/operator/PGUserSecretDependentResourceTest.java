@@ -21,7 +21,7 @@ import static org.mockito.Mockito.when;
 
 class PGUserSecretDependentResourceTest {
     @Test
-    public void testDesired() {
+    public void testDesiredWithPgUser() {
         PGUserCRD primary = new PGUserCRD();
         Context<PGUserCRD> context = mock(Context.class);
 
@@ -45,6 +45,19 @@ class PGUserSecretDependentResourceTest {
         String decodedUsernameString = new String(decodedUsername);
 
         assertEquals(pgUser.getUsername(), decodedUsernameString);
+    }
+
+    @Test
+    public void testDesiredWithoutPgUser() {
+        PGUserCRD primary = new PGUserCRD();
+        Context<PGUserCRD> context = mock(Context.class);
+
+        PGUserSecretDependentResource pgUserSecretDependentResource = new PGUserSecretDependentResource(
+                mock(FlaisWorkflow.class),
+                mock(KubernetesClient.class),
+                mock(PGUserDependentResource.class),
+                mock(OperatorProperties.class)
+        );
 
         when(context.getSecondaryResource(PGUser.class)).thenReturn(Optional.empty());
 
@@ -85,22 +98,6 @@ class PGUserSecretDependentResourceTest {
         assertEquals("testUser", decodedUsernameString);
         assertEquals("testPassword", decodedPasswordString);
         assertEquals("testUrltestDatabase?sslmode=require&prepareThreshold=0&ApplicationName=testUser", decodedUrlString);
-    }
-
-    @Test
-    public void testEncode() {
-        String value = "test string";
-        String encodedValue = Base64.getEncoder().encodeToString(value.getBytes());
-        String hardCodedValue = "dGVzdCBzdHJpbmc=";
-        assertEquals(encodedValue, hardCodedValue);
-    }
-
-    @Test
-    public void testDecode() {
-        String value = "dGVzdCBzdHJpbmc=";
-        String decodedValue = new String(Base64.getDecoder().decode(value));
-        String hardCodedValue = "test string";
-        assertEquals(decodedValue, hardCodedValue);
     }
 
 }
