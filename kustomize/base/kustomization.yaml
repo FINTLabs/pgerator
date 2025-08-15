@@ -20,3 +20,4 @@ commonLabels:
   app.kubernetes.io/part-of: fintlabs-application-infrastructure-services
   fintlabs.no/team: flais
   fintlabs.no/org-id: flais.io
+  observability.fintlabs.no/loki: "true"

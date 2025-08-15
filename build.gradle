@@ -24,26 +24,20 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
     implementation 'org.springframework.boot:spring-boot-starter-data-jdbc'
-    testImplementation 'junit:junit:4.13.1'
-    implementation 'mysql:mysql-connector-java:8.0.28'
-
+    implementation 'com.mysql:mysql-connector-j:9.4.0'
+    implementation 'no.fintlabs:flais-operator-starter:1.0.0-rc-9'
+    implementation 'org.postgresql:postgresql:42.7.2'
+    implementation 'io.netty:netty-resolver-dns-native-macos:4.1.85.Final:osx-aarch_64'
 
     runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
-
-    implementation 'io.netty:netty-resolver-dns-native-macos:4.1.85.Final:osx-aarch_64'
-    testImplementation 'org.spockframework:spock-core'
-
 
     compileOnly 'org.projectlombok:lombok'
 
     annotationProcessor 'org.projectlombok:lombok'
-
-    implementation 'no.fintlabs:flais-operator-starter:1.0.0-rc-9'
-
-    runtimeOnly 'org.postgresql:postgresql'
-
     annotationProcessor 'io.fabric8:crd-generator-apt:6.2.0'
 
+    testImplementation 'org.spockframework:spock-core'
+    testImplementation 'junit:junit:4.13.1'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'cglib:cglib-nodep:3.3.0'
     testImplementation 'org.spockframework:spock-spring:2.3-groovy-4.0'
