@@ -1,6 +1,7 @@
 package no.fintlabs.pg;
 
 import lombok.extern.slf4j.Slf4j;
+import no.fintlabs.exceptions.NonRetryableException;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.core.env.Environment;
 import org.springframework.dao.DataAccessException;
@@ -19,6 +20,18 @@ public class PgService {
     private final Environment environment;
     private final JdbcTemplate jdbcTemplate;
 
+    private static boolean isPgSafeIdent(String s) {
+        return s != null && s.matches("[a-z_][a-z0-9_-]*");
+    }
+
+    private static void ensurePgSafeIdentOrThrow(String ident) {
+        if (!isPgSafeIdent(ident)) {
+            throw new NonRetryableException(
+                    "Illegal DB identifier '" + ident + "'. Allowed: [a-z0-9_], must start with [a-z_]."
+            );
+        }
+    }
+
     public PgService(JdbcTemplate jdbcTemplate, Environment environment) {
         this.jdbcTemplate = jdbcTemplate;
         try {
@@ -30,6 +43,7 @@ public class PgService {
     }
 
     public void deleteSchema(String dbName, String username) throws DataAccessException {
+        ensurePgSafeIdentOrThrow(username);
         synchronized (jdbcTemplate) {
             changeDatabase(dbName);
             jdbcTemplate.execute(String.format("DROP SCHEMA %s CASCADE", username));
@@ -53,6 +67,7 @@ public class PgService {
     }
 
     public void ensureSchema(String databaseName, String username) throws DataAccessException {
+        ensurePgSafeIdentOrThrow(username);
         synchronized (jdbcTemplate) {
             changeDatabase(databaseName);
             jdbcTemplate.execute(String.format("CREATE SCHEMA IF NOT EXISTS %s", username));
@@ -62,7 +77,7 @@ public class PgService {
 
 
     public void ensureUsageAndCreateOnSchema(String databaseName, String username) throws DataAccessException {
-
+        ensurePgSafeIdentOrThrow(username);
         synchronized (jdbcTemplate) {
             changeDatabase(databaseName);
             jdbcTemplate.execute(String.format("grant usage on schema %s to %s", username, username));
