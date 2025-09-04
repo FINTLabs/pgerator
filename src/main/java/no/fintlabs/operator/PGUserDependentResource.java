@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import no.fintlabs.FlaisExternalDependentResource;
 import no.fintlabs.aiven.AivenService;
 import no.fintlabs.aiven.FailedToCreateAivenObjectException;
+import no.fintlabs.exceptions.NonRetryableException;
 import no.fintlabs.pg.PgService;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Component;
@@ -82,9 +83,14 @@ public class PGUserDependentResource extends FlaisExternalDependentResource<PGUs
 
                         return desired;
 
-                    } catch (FailedToCreateAivenObjectException | DataAccessException e) {
+                    } catch (NonRetryableException e) {
+                        log.warn("PG step skipped {}", e.getMessage());
+
                         aivenService.deleteUserForService(desired.getUsername());
                         // pgService.deleteSchema(desired.getDatabase(), desired.getUsername());
+                        return desired;
+                    } catch (FailedToCreateAivenObjectException | DataAccessException e) {
+                        aivenService.deleteUserForService(desired.getUsername());
                         throw new RuntimeException(e);
                     }
                 });

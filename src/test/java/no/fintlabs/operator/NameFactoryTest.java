@@ -2,8 +2,7 @@ package no.fintlabs.operator;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class NameFactoryTest {
     PGUserCRD crd = new PGUserCRD();
@@ -36,5 +35,26 @@ public class NameFactoryTest {
         crd.getMetadata().getLabels().put("fintlabs.no/org-id", "flais.io");
 
         assertThrows(IllegalArgumentException.class, () -> NameFactory.createUsername(crd));
+    }
+
+    @Test
+    public void hyphenInOrgIdIsReplacedWithUnderscore() {
+        crd.getMetadata().setName("test-test");
+        crd.getMetadata().getLabels().put("fintlabs.no/org-id", "flais.io");
+
+        String name = NameFactory.createUsername(crd);
+
+        assertEquals("flais_io_test_test", name);
+        assertFalse(name.contains("-"), "Username should not contain hyphen");
+    }
+
+    @Test
+    public void usernameIsAlwaysLowerCase() {
+        crd.getMetadata().setName("TestingTesting");
+        crd.getMetadata().getLabels().put("fintlabs.no/org-id", "Flais.IO");
+
+        String name = NameFactory.createUsername(crd);
+
+        assertEquals("flais_io_testingtesting", name);
     }
 }

@@ -3,6 +3,8 @@ package no.fintlabs.operator;
 import io.javaoperatorsdk.operator.api.reconciler.Context;
 import no.fintlabs.aiven.AivenService;
 import no.fintlabs.aiven.AivenServiceUser;
+import no.fintlabs.aiven.FailedToCreateAivenObjectException;
+import no.fintlabs.exceptions.NonRetryableException;
 import no.fintlabs.pg.PgService;
 import org.junit.jupiter.api.Test;
 
@@ -105,5 +107,42 @@ public class PgUserDependentResourceTest {
         Set<PGUser> result = resource.fetchResources(primary);
 
         assertEquals(0, result.size());
+    }
+
+    @Test
+    void createCatchesNonRetryableProblemDeletesAivenUserAndDoesNotRethrow()
+    throws FailedToCreateAivenObjectException {
+
+        AivenService aivenService = mock(AivenService.class);
+        PgService pgService = mock(PgService.class);
+        PGUserWorkflow pgUserWorkflow = mock(PGUserWorkflow.class);
+        @SuppressWarnings("unchecked")
+        Context<PGUserCRD> mockContext = mock(Context.class);
+        String db = "initialdb";
+        String username = "ok_name";
+
+        when(mockContext.getSecondaryResource(PGUser.class)).thenReturn(Optional.empty());
+        when(aivenService.getServiceUser(username)).thenReturn(Optional.empty());
+
+        doNothing().when(aivenService).createUserForService(any());
+
+        doThrow(new NonRetryableException("Illegal DB identifier 'ok_name'"))
+                .when(pgService).ensureSchema(db, username);
+
+        PGUserDependentResource resource = new PGUserDependentResource(pgUserWorkflow, aivenService, pgService);
+
+        PGUser desired = PGUser.builder()
+                .database(db)
+                .username(username)
+                .build();
+        PGUserCRD primary = new PGUserCRD();
+
+        PGUser result = resource.create(desired, primary, mockContext);
+
+        assertEquals(desired, result);
+        verify(aivenService).createUserForService(desired);
+        verify(aivenService).deleteUserForService(username);
+        verify(pgService).ensureSchema(db, username);
+        verify(pgService, never()).ensureUsageAndCreateOnSchema(anyString(), anyString());
     }
 }
