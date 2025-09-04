@@ -52,7 +52,9 @@ jobs:
   create-release:
     if: github.ref == 'refs/heads/prod'
     uses: ./.github/workflows/.create-release.yaml
-    needs: build-publish
+    needs:
+      - build-publish
+      - deploy-api
     secrets: inherit
     with:
       image-tags: ${{ needs.build-publish.outputs.image-tags }}
